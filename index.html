@@ -3,40 +3,46 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>My暗記アプリ</title>
+    <title>My暗記アプリ Pro</title>
     <link rel="manifest" href="manifest.json">
     <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; text-align: center; background: #f5f7fa; padding-top: 50px; margin: 0; }
+        body { font-family: -apple-system, sans-serif; text-align: center; background: #f5f7fa; margin: 0; padding-top: 30px; }
         .container { width: 90%; max-width: 400px; margin: 0 auto; }
         #card { 
-            background: white; min-height: 200px; margin: 20px auto; 
-            padding: 40px 20px; border-radius: 20px; 
-            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
-            display: flex; align-items: center; justify-content: center;
-            cursor: pointer; transition: transform 0.2s;
+            background: white; min-height: 250px; margin-bottom: 20px; 
+            padding: 20px; border-radius: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+            display: flex; align-items: center; justify-content: center; position: relative;
         }
-        #card:active { transform: scale(0.98); }
-        #question { font-size: 28px; font-weight: bold; color: #333; }
-        #answer { font-size: 22px; color: #ff4757; margin-top: 15px; font-weight: bold; }
-        button { 
-            background: #007aff; color: white; border: none; 
-            padding: 15px 40px; border-radius: 30px; font-size: 18px; 
-            font-weight: bold; cursor: pointer; width: 100%;
-            box-shadow: 0 4px 15px rgba(0,122,255,0.3);
-        }
-        #loading { font-size: 14px; color: #888; margin-top: 20px; }
+        #question { font-size: 32px; font-weight: bold; color: #333; }
+        #answer { font-size: 24px; color: #ff4757; margin-top: 20px; font-weight: bold; }
+        .button-area { display: flex; flex-direction: column; gap: 15px; }
+        button { border: none; padding: 18px; border-radius: 15px; font-size: 18px; font-weight: bold; cursor: pointer; }
+        .show-btn { background: #007aff; color: white; width: 100%; }
+        .eval-container { display: none; gap: 10px; width: 100%; }
+        .eval-btn { flex: 1; color: white; font-size: 14px; }
+        .bad { background: #ff4757; }
+        .good { background: #ffa502; }
+        .perfect { background: #2ed573; }
+        #saveStatus { font-size: 12px; color: #aaa; margin-top: 10px; height: 1em; }
     </style>
 </head>
 <body>
     <div class="container">
-        <div id="card" onclick="flipCard()">
+        <div id="card">
             <div>
                 <div id="question">読み込み中...</div>
                 <div id="answer" style="display:none"></div>
             </div>
         </div>
-        <button onclick="nextCard()">次の問題へ</button>
-        <div id="loading">スプレッドシートから同期中</div>
+        <div class="button-area">
+            <button id="showAnswerBtn" class="show-btn" onclick="flipCard()">答えを見る</button>
+            <div id="evalContainer" class="eval-container">
+                <button class="eval-btn bad" onclick="handleEval('ダメ')">ダメ</button>
+                <button class="eval-btn good" onclick="handleEval('オッケー')">オッケー</button>
+                <button class="eval-btn perfect" onclick="handleEval('完璧')">完璧</button>
+            </div>
+        </div>
+        <div id="saveStatus"></div>
     </div>
     <script src="script.js"></script>
 </body>
