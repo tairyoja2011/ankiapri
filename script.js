@@ -1,7 +1,7 @@
 // script.js
 
 // 1. スプレッドシートから公開したCSVのURLをここに貼り付ける
-const csvUrl = https://docs.google.com/spreadsheets/d/e/2PACX-1vQiBU73LGsFHvtGPvST1fPIxvetpofBMFpKeQTLHBZN0wtMPOQKJnTbzjTcCNTew5fiVwXoVL1dlPQB/pubhtml;
+const csvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQiBU73LGsFHvtGPvST1fPIxvetpofBMFpKeQTLHBZN0wtMPOQKJnTbzjTcCNTew5fiVwXoVL1dlPQB/pubhtml";
 
 let flashcards = [];
 let currentIndex = 0;
@@ -36,3 +36,4 @@ function shuffleCards() {
 
 // ...あとの showNextCard() や flipCard() は前回と同じでOK
 loadSpreadsheet();
+
