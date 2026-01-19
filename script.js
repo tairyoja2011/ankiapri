@@ -1,30 +1,38 @@
-const flashcards = [
-    { q: "Apple", a: "りんご" },
-    { q: "Library", a: "図書館" },
-    { q: "Success", a: "成功" }
-];
+// script.js
 
+// 1. スプレッドシートから公開したCSVのURLをここに貼り付ける
+const csvUrl = https://docs.google.com/spreadsheets/d/e/2PACX-1vQiBU73LGsFHvtGPvST1fPIxvetpofBMFpKeQTLHBZN0wtMPOQKJnTbzjTcCNTew5fiVwXoVL1dlPQB/pubhtml;
+
+let flashcards = [];
 let currentIndex = 0;
 
-const questionEl = document.getElementById("question");
-const answerEl = document.getElementById("answer");
+async function loadSpreadsheet() {
+    try {
+        // スプレッドシートのデータを取得
+        const response = await fetch(csvUrl);
+        const text = await response.text();
+        
+        // CSV文字列を解析して配列にする
+        const rows = text.split('\n').slice(1);
+        flashcards = rows
+            .filter(row => row.trim() !== "")
+            .map(row => {
+                const [q, a] = row.split(',');
+                return { q: q.trim(), a: a.trim() };
+            });
 
-function flipCard() {
-    // 答えの表示・非表示を切り替える
-    if (answerEl.style.display === "none") {
-        answerEl.style.display = "block";
-    } else {
-        answerEl.style.display = "none";
+        // 読み込み完了後にシャッフル（おまけ機能）
+        shuffleCards();
+        showNextCard();
+    } catch (error) {
+        console.error("データの読み込みに失敗しました:", error);
     }
 }
 
-function nextCard() {
-    // 次の問題へ（最後の次は最初に戻る）
-    currentIndex = (currentIndex + 1) % flashcards.length;
-    questionEl.textContent = flashcards[currentIndex].q;
-    answerEl.textContent = flashcards[currentIndex].a;
-    answerEl.style.display = "none"; // 答えは隠しておく
+// 配列をバラバラにする（ランダム出題用）
+function shuffleCards() {
+    flashcards.sort(() => Math.random() - 0.5);
 }
 
-// 最初の問題を表示
-nextCard();
+// ...あとの showNextCard() や flipCard() は前回と同じでOK
+loadSpreadsheet();
