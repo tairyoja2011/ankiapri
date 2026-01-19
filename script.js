@@ -1,40 +1,66 @@
-// script.js
-
-// 1. スプレッドシートから公開したCSVのURLをここに貼り付ける
-const csvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQiBU73LGsFHvtGPvST1fPIxvetpofBMFpKeQTLHBZN0wtMPOQKJnTbzjTcCNTew5fiVwXoVL1dlPQB/pub?gid=0&single=true&output=csv";
+// 【重要】スプレッドシートの「Webに公開」で取得したCSVのURLをここに貼り付けてください
+const SPREADSHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQiBU73LGsFHvtGPvST1fPIxvetpofBMFpKeQTLHBZN0wtMPOQKJnTbzjTcCNTew5fiVwXoVL1dlPQB/pub?gid=0&single=true&output=csv";
 
 let flashcards = [];
 let currentIndex = 0;
 
-async function loadSpreadsheet() {
+const questionEl = document.getElementById("question");
+const answerEl = document.getElementById("answer");
+
+// スプレッドシートからデータを取得
+async function loadData() {
     try {
-        // スプレッドシートのデータを取得
-        const response = await fetch(csvUrl);
-        const text = await response.text();
+        const response = await fetch(SPREADSHEET_CSV_URL);
+        const csvText = await response.text();
         
-        // CSV文字列を解析して配列にする
-        const rows = text.split('\n').slice(1);
+        // CSVを1行ずつ分割
+        const rows = csvText.split(/\r?\n/).slice(1); 
+        
         flashcards = rows
             .filter(row => row.trim() !== "")
             .map(row => {
-                const [q, a] = row.split(',');
-                return { q: q.trim(), a: a.trim() };
+                // カンマで分割（簡易版）
+                const columns = row.split(',');
+                return { q: columns[0], a: columns[1] };
             });
 
-        // 読み込み完了後にシャッフル（おまけ機能）
+        // 読み込み完了後にシャッフル
         shuffleCards();
-        showNextCard();
+        showCard();
     } catch (error) {
-        console.error("データの読み込みに失敗しました:", error);
+        questionEl.textContent = "読み込み失敗";
+        console.error("Error:", error);
     }
 }
 
-// 配列をバラバラにする（ランダム出題用）
 function shuffleCards() {
-    flashcards.sort(() => Math.random() - 0.5);
+    for (let i = flashcards.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [flashcards[i], flashcards[j]] = [flashcards[j], flashcards[i]];
+    }
 }
 
-// ...あとの showNextCard() や flipCard() は前回と同じでOK
-loadSpreadsheet();
+function showCard() {
+    if (flashcards.length > 0) {
+        questionEl.textContent = flashcards[currentIndex].q;
+        answerEl.textContent = flashcards[currentIndex].a;
+        answerEl.style.display = "none";
+    }
+}
 
+function flipCard() {
+    if (answerEl.style.display === "none") {
+        answerEl.style.display = "block";
+    } else {
+        answerEl.style.display = "none";
+    }
+}
 
+function nextCard() {
+    if (flashcards.length === 0) return;
+    currentIndex = (currentIndex + 1) % flashcards.length;
+    showCard();
+}
+
+// 起動時にデータを読み込む
+loadData();
