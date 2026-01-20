@@ -123,3 +123,4 @@ function handleEval(rating) {
 
 // 起動
 loadData();
+
