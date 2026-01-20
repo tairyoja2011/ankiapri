@@ -1,11 +1,7 @@
-// 【重要】スプレッドシートの「Webに公開」で取得したCSVのURLをここに貼り付けてください
-const SPREADSHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQiBU73LGsFHvtGPvST1fPIxvetpofBMFpKeQTLHBZN0wtMPOQKJnTbzjTcCNTew5fiVwXoVL1dlPQB/pub?gid=0&single=true&output=csv";
-// --- 設定エリア ---
-
 //スプレッドシートのWeb公開(CSV)URL
 const READ_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQiBU73LGsFHvtGPvST1fPIxvetpofBMFpKeQTLHBZN0wtMPOQKJnTbzjTcCNTew5fiVwXoVL1dlPQB/pub?gid=0&single=true&output=csv";
 //"先ほどコピーしたGASのウェブアプリURL";
-const WRITE_URL = "先ほどコピーしたGASのウェブアプリURL";
+const WRITE_URL = "https://script.google.com/macros/s/AKfycbzxEnfw0-oIgZ_cPZriklw73B49bhDq8zXXRUT5qEu6mQwHbyeS3Q-EYjmNeULDdYCl/exec";
 
 let queue = [];
 let currentCard = null;
@@ -94,3 +90,4 @@ function handleEval(rating) {
 }
 
 loadData();
+
