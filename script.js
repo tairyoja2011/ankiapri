@@ -97,7 +97,7 @@ async function saveToSheet(word, rating) {
 
 function handleEval(rating) {
     saveToSheet(currentCard.q, rating); 
-    if (rating === 'ダメ') queue.splice(1, 0, currentCard);
+    if (rating === 'ダメ') queue.splice(4, 0, currentCard);
     else if (rating === 'オッケー') queue.push(currentCard);
     showNextCard();
 }
