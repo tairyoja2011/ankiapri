@@ -6,8 +6,21 @@
     <title>My暗記アプリ Pro</title>
     <link rel="manifest" href="manifest.json">
     <style>
-        body { font-family: -apple-system, sans-serif; text-align: center; background: #f5f7fa; margin: 0; padding-top: 30px; }
+        body { 
+            font-family: -apple-system, sans-serif; 
+            text-align: center; 
+            background: #f5f7fa; 
+            margin: 0; 
+            padding-top: 30px; 
+            /* 下部にボタンを配置するための余白 */
+            padding-bottom: 80px; 
+            min-height: 100vh;
+            position: relative;
+            box-sizing: border-box;
+        }
         .container { width: 90%; max-width: 400px; margin: 0 auto; }
+        
+        /* カード・ボタン等のスタイル（変更なし） */
         #card { background: white; min-height: 300px; margin-bottom: 20px; padding: 20px; border-radius: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); display: flex; align-items: center; justify-content: center; }
         #question { font-size: 32px; font-weight: bold; color: #333; margin-bottom: 10px; }
         #answer { font-size: 24px; color: #ff4757; margin-bottom: 20px; font-weight: bold; }
@@ -25,7 +38,20 @@
         .good { background: #ffa502; }
         .perfect { background: #2ed573; }
         #saveStatus { font-size: 12px; color: #aaa; margin-top: 10px; height: 1.5em; }
-        .reset-link { margin-top: 40px; display: block; color: #bbb; font-size: 12px; text-decoration: underline; background: none; border: none; width: 100%; }
+
+        /* リセットボタンを画面最下部に固定 */
+        .reset-link { 
+            position: fixed;
+            bottom: 20px;
+            left: 0;
+            width: 100%;
+            color: #bbb; 
+            font-size: 12px; 
+            text-decoration: underline; 
+            background: none; 
+            border: none; 
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
@@ -52,8 +78,10 @@
             </div>
         </div>
         <div id="saveStatus"></div>
-        <button class="reset-link" onclick="resetAllStats()">学習履歴をすべてリセット</button>
     </div>
+    
+    <button class="reset-link" onclick="resetAllStats()">学習履歴をすべてリセット</button>
+
     <script src="script.js"></script>
 </body>
 </html>
