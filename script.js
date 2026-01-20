@@ -57,6 +57,8 @@ function showNextCard() {
         return;
     }
     currentCard = queue.shift();
+    
+    // 表示データのセット
     questionEl.textContent = currentCard.q;
     answerEl.textContent = currentCard.a;
     document.getElementById("statStatus").textContent = currentCard.status;
@@ -64,15 +66,16 @@ function showNextCard() {
     document.getElementById("statBad").textContent = currentCard.bad;
     document.getElementById("statGood").textContent = currentCard.good;
     document.getElementById("statPerfect").textContent = currentCard.perfect;
-    answerEl.style.display = "none";
-    statsArea.style.display = "none";
+
+    // 表示・非表示の切り替え
+    answerEl.style.display = "none";      // 答えは隠す
+    statsArea.style.display = "grid";     // 統計は最初から出す
     showAnswerBtn.style.display = "block";
     evalContainer.style.display = "none";
 }
 
 function flipCard() {
-    answerEl.style.display = "block";
-    statsArea.style.display = "grid";
+    answerEl.style.display = "block";     // 答えを表示
     showAnswerBtn.style.display = "none";
     evalContainer.style.display = "flex";
 }
@@ -97,14 +100,13 @@ async function saveToSheet(word, rating) {
 
 function handleEval(rating) {
     saveToSheet(currentCard.q, rating); 
-    if (rating === 'ダメ') queue.splice(4, 0, currentCard);
+    if (rating === 'ダメ') queue.splice(1, 0, currentCard); // 短い間隔で再出題
     else if (rating === 'オッケー') queue.push(currentCard);
     showNextCard();
 }
 
-// 履歴リセット関数
 async function resetAllStats() {
-    if (!confirm("すべての学習履歴をリセットしますか？\n(問題と答えは消えません)")) return;
+    if (!confirm("すべての学習履歴をリセットしますか？")) return;
     saveStatusEl.textContent = "リセット中...";
     localStorage.removeItem('perfectCards');
     try {
@@ -113,9 +115,9 @@ async function resetAllStats() {
             mode: "no-cors",
             body: JSON.stringify({ action: "reset_all" })
         });
-        saveStatusEl.textContent = "リセット完了！再読み込みします...";
+        saveStatusEl.textContent = "完了！再起動します...";
         setTimeout(() => location.reload(), 2000);
-    } catch (e) { saveStatusEl.textContent = "リセット失敗"; }
+    } catch (e) { saveStatusEl.textContent = "失敗"; }
 }
 
 loadData();
