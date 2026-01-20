@@ -19,7 +19,6 @@ async function loadData() {
         const response = await fetch(READ_URL);
         const csvText = await response.text();
         const rows = csvText.split(/\r?\n/).slice(1); 
-        
         const localPerfectList = JSON.parse(localStorage.getItem('perfectCards') || "[]");
 
         const flashcards = rows.filter(row => row.trim() !== "").map(row => {
@@ -38,9 +37,7 @@ async function loadData() {
         queue = [...flashcards];
         shuffleArray(queue);
         showNextCard();
-    } catch (error) {
-        questionEl.textContent = "読み込み失敗";
-    }
+    } catch (error) { questionEl.textContent = "読み込み失敗"; }
 }
 
 function shuffleArray(array) {
@@ -60,8 +57,6 @@ function showNextCard() {
         return;
     }
     currentCard = queue.shift();
-    
-    // 画面にテキストと統計をセット
     questionEl.textContent = currentCard.q;
     answerEl.textContent = currentCard.a;
     document.getElementById("statStatus").textContent = currentCard.status;
@@ -69,7 +64,6 @@ function showNextCard() {
     document.getElementById("statBad").textContent = currentCard.bad;
     document.getElementById("statGood").textContent = currentCard.good;
     document.getElementById("statPerfect").textContent = currentCard.perfect;
-
     answerEl.style.display = "none";
     statsArea.style.display = "none";
     showAnswerBtn.style.display = "block";
@@ -78,7 +72,7 @@ function showNextCard() {
 
 function flipCard() {
     answerEl.style.display = "block";
-    statsArea.style.display = "grid"; // 統計を表示
+    statsArea.style.display = "grid";
     showAnswerBtn.style.display = "none";
     evalContainer.style.display = "flex";
 }
@@ -98,9 +92,7 @@ async function saveToSheet(word, rating) {
         });
         saveStatusEl.textContent = "保存完了";
         setTimeout(() => saveStatusEl.textContent = "", 1500);
-    } catch (e) {
-        saveStatusEl.textContent = "保存失敗";
-    }
+    } catch (e) { saveStatusEl.textContent = "保存失敗"; }
 }
 
 function handleEval(rating) {
@@ -108,6 +100,22 @@ function handleEval(rating) {
     if (rating === 'ダメ') queue.splice(1, 0, currentCard);
     else if (rating === 'オッケー') queue.push(currentCard);
     showNextCard();
+}
+
+// 履歴リセット関数
+async function resetAllStats() {
+    if (!confirm("すべての学習履歴をリセットしますか？\n(問題と答えは消えません)")) return;
+    saveStatusEl.textContent = "リセット中...";
+    localStorage.removeItem('perfectCards');
+    try {
+        await fetch(WRITE_URL, {
+            method: "POST",
+            mode: "no-cors",
+            body: JSON.stringify({ action: "reset_all" })
+        });
+        saveStatusEl.textContent = "リセット完了！再読み込みします...";
+        setTimeout(() => location.reload(), 2000);
+    } catch (e) { saveStatusEl.textContent = "リセット失敗"; }
 }
 
 loadData();
