@@ -1,9 +1,6 @@
 const READ_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQiBU73LGsFHvtGPvST1fPIxvetpofBMFpKeQTLHBZN0wtMPOQKJnTbzjTcCNTew5fiVwXoVL1dlPQB/pub?gid=0&single=true&output=csv";
 const WRITE_URL = "https://script.google.com/macros/s/AKfycbzxEnfw0-oIgZ_cPZriklw73B49bhDq8zXXRUT5qEu6mQwHbyeS3Q-EYjmNeULDdYCl/exec";
 
-const READ_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQiBU73LGsFHvtGPvST1fPIxvetpofBMFpKeQTLHBZN0wtMPOQKJnTbzjTcCNTew5fiVwXoVL1dlPQB/pub?gid=0&single=true&output=csv";
-const WRITE_URL = "YOUR_GAS_WEBAPP_URL"; // GASのURLを入れてください
-
 let allCards = [];
 let queue = [];
 let currentCard = null;
@@ -176,5 +173,6 @@ async function resetAllStats() {
     alert("リセット完了しました");
     location.reload();
 }
+
 
 
