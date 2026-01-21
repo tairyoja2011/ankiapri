@@ -24,41 +24,29 @@ async function loadData() {
     const rows = csv.split(/\r?\n/).slice(1);
     allCards = rows.filter(r => r.trim()).map(r => {
         const c = r.split(',');
-        return {
-            q: c[0]?.trim(), a: c[1]?.trim(), status: c[2]?.trim() || "未回答",
-            bad: Number(c[3])||0, good: Number(c[4])||0, perfect: Number(c[5])||0, total: Number(c[6])||0
-        };
+        return { q: c[0]?.trim(), a: c[1]?.trim(), status: c[2]?.trim() || "未回答", bad: Number(c[3])||0, good: Number(c[4])||0, perfect: Number(c[5])||0, total: Number(c[6])||0 };
     });
 }
 
 function prepareQueue(type) {
-    const localPerfect = JSON.parse(localStorage.getItem('perfectCards') || "[]");
-    if (type === 'bad') {
-        queue = allCards.filter(c => c.bad > 0 || c.status === "未回答" || c.status === "未着手" || c.status === "");
-    } else if (type === 'good-perfect') {
-        queue = allCards.filter(c => c.good > 0 || c.perfect > 0 || localPerfect.includes(c.q));
-    } else {
-        queue = allCards.filter(c => c.status !== "完璧" && !localPerfect.includes(c.q));
-    }
+    if (type === 'bad') queue = allCards.filter(c => c.bad > 0 || c.status === "未回答" || c.status === "未着手" || c.status === "");
+    else if (type === 'good-perfect') queue = allCards.filter(c => c.good > 0 || c.perfect > 0);
+    else queue = allCards.filter(c => c.status !== "完璧");
     queue.sort(() => Math.random() - 0.5);
 }
 
 async function startStudyMode(type) {
     isInputMode = false;
-    await loadData();
-    prepareQueue(type);
+    await loadData(); prepareQueue(type);
     if (queue.length === 0) return alert("対象がありません");
-    changeView('view-study');
-    showNext();
+    changeView('view-study'); showNext();
 }
 
 async function startInputMode() {
     isInputMode = true;
-    await loadData();
-    prepareQueue('all');
+    await loadData(); prepareQueue('all');
     if (queue.length === 0) return alert("対象がありません");
-    changeView('view-study');
-    showNext();
+    changeView('view-study'); showNext();
 }
 
 function showNext() {
@@ -66,27 +54,23 @@ function showNext() {
         document.getElementById("question").textContent = "全問終了！";
         document.getElementById("evalContainer").style.display = "none";
         document.getElementById("showAnswerBtn").style.display = "none";
+        document.getElementById("answer-container").style.display = "none";
         return;
     }
     currentCard = queue.shift();
     document.getElementById("question").textContent = currentCard.q;
-    
-    // 表示用と編集用の両方にセット
-    document.getElementById("answer-display").textContent = currentCard.a;
+    document.getElementById("answer-display").innerText = currentCard.a;
     document.getElementById("answer-edit").value = currentCard.a;
     
-    // 統計更新
     document.getElementById("statTotal").textContent = currentCard.total;
     document.getElementById("statBad").textContent = currentCard.bad;
     document.getElementById("statGood").textContent = currentCard.good;
     document.getElementById("statPerfect").textContent = currentCard.perfect;
 
-    // 表示リセット
     document.getElementById("user-input-area").style.display = isInputMode ? "block" : "none";
     document.getElementById("user-answer-input").value = "";
     document.getElementById("answer-container").style.display = "none";
     document.getElementById("edit-mode-area").style.display = "none";
-    document.getElementById("edit-toggle-btn").style.display = "block";
     document.getElementById("comparison-area").style.display = "none";
     document.getElementById("showAnswerBtn").style.display = "block";
     document.getElementById("evalContainer").style.display = "none";
@@ -95,39 +79,50 @@ function showNext() {
 function flipCard() {
     if (isInputMode) {
         const inputVal = document.getElementById("user-answer-input").value.trim();
-        const displayVal = inputVal === "" ? "(未入力)" : inputVal;
-        document.getElementById("current-user-ans").textContent = displayVal;
+        document.getElementById("current-user-ans").innerText = inputVal || "(未入力)";
         const key = "last_ans_" + currentCard.q;
-        const lastVal = localStorage.getItem(key) || "(記録なし)";
-        document.getElementById("last-user-ans").textContent = lastVal;
+        document.getElementById("last-user-ans").innerText = localStorage.getItem(key) || "(記録なし)";
         if (inputVal !== "") localStorage.setItem(key, inputVal);
         document.getElementById("comparison-area").style.display = "block";
+        // 入力モード時は修正ボタンを隠す
+        document.getElementById("edit-toggle-btn").style.display = "none";
+    } else {
+        document.getElementById("edit-toggle-btn").style.display = "block";
     }
     document.getElementById("answer-container").style.display = "block";
     document.getElementById("showAnswerBtn").style.display = "none";
     document.getElementById("evalContainer").style.display = "flex";
 }
 
-// 【修正】編集モードの切り替え
 function toggleEditMode() {
     document.getElementById("edit-mode-area").style.display = "block";
-    document.getElementById("edit-toggle-btn").style.display = "none";
     document.getElementById("answer-display").style.display = "none";
+    document.getElementById("edit-toggle-btn").style.display = "none";
 }
 
 async function updateCurrentCardContent() {
     const newA = document.getElementById("answer-edit").value;
-    if(!confirm("内容を更新しますか？")) return;
-    
-    // UI更新
-    document.getElementById("answer-display").textContent = newA;
-    document.getElementById("edit-mode-area").style.display = "none";
-    document.getElementById("edit-toggle-btn").style.display = "block";
-    document.getElementById("answer-display").style.display = "block";
-    
-    // GAS送信
     fetch(WRITE_URL, { method: "POST", mode: "no-cors", body: JSON.stringify({ action: "update_content", word: currentCard.q, new_answer: newA }) });
     currentCard.a = newA;
+    document.getElementById("answer-display").innerText = newA;
+    document.getElementById("edit-mode-area").style.display = "none";
+    document.getElementById("answer-display").style.display = "block";
+    document.getElementById("edit-toggle-btn").style.display = "block";
+}
+
+async function addNewCard() {
+    const q = document.getElementById("new-q").value.trim();
+    const a = document.getElementById("new-a").value.trim();
+    if(!q || !a) return alert("問題と答えの両方を入力してください");
+    
+    document.querySelector("#view-add .show-btn").innerText = "送信中...";
+    await fetch(WRITE_URL, { method: "POST", mode: "no-cors", body: JSON.stringify({ action: "add_new", word: q, answer: a }) });
+    
+    alert("追加しました！");
+    document.getElementById("new-q").value = "";
+    document.getElementById("new-a").value = "";
+    document.querySelector("#view-add .show-btn").innerText = "スプレッドシートに追加";
+    changeView('view-top');
 }
 
 async function handleEval(rating) {
@@ -137,14 +132,7 @@ async function handleEval(rating) {
 }
 
 async function startListMode() {
-    await loadData();
-    changeView('view-list');
+    await loadData(); changeView('view-list');
     const container = document.getElementById('list-container');
-    container.innerHTML = allCards.map((c, i) => `
-        <div class="list-item">
-            <div style="font-size:11px; color:#aaa; margin-bottom:5px;">No. ${i+1}</div>
-            <div style="font-weight:bold; font-size:17px;">${c.q}</div>
-            <div style="color:#ff4757; font-size:15px; margin-top:4px;">${c.a}</div>
-        </div>
-    `).join('');
+    container.innerHTML = allCards.map((c, i) => `<div class="list-item"><b>${i+1}. ${c.q}</b><br><span style="color:#ff4757; font-size:14px;">${c.a}</span></div>`).join('');
 }
