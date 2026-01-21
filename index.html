@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>My暗記アプリ v6.0</title>
+    <title>My暗記アプリ v6.1</title>
     <style>
         body { font-family: -apple-system, sans-serif; background: #f0f2f5; margin: 0; padding: 0; }
         .container { width: 95%; max-width: 500px; margin: 0 auto; padding: 60px 0 100px; text-align: center; position: relative; }
@@ -27,8 +27,15 @@
 
         /* 一覧バッジ */
         .list-item { background: white; margin-bottom: 15px; padding: 20px; border-radius: 20px; text-align: left; border-left: 6px solid #007aff; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        .list-q { font-weight:bold; font-size:16px; margin-bottom:8px; }
+        .list-a { color:#ff4757; font-size:15px; white-space:pre-wrap; margin-bottom:10px; }
         .stat-badge { padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: bold; color: white; margin-right: 5px; }
         .badge-bad { background: #ff4757; } .badge-good { background: #ffa502; } .badge-perfect { background: #2ed573; }
+        
+        /* 統計グリッド（復活） */
+        .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-top: 20px; }
+        .stat-item { background: white; padding: 10px 2px; border-radius: 12px; font-size: 12px; box-shadow: 0 2px 5px rgba(0,0,0,0.03); }
+        .label { font-size: 9px; color: #aaa; display:block; }
     </style>
 </head>
 <body>
@@ -55,19 +62,19 @@
             
             <div id="card">
                 <div style="width: 100%;">
-                    <div id="question">...</div>
+                    <div id="question">読み込み中...</div>
                     <div id="user-input-area" style="display:none; margin-top:10px;">
                         <textarea id="user-answer-input" placeholder="答えを入力"></textarea>
                     </div>
                     <div id="answer-container" style="display:none; margin-top:15px;">
-                        <div id="answer-display" style="font-size:26px; font-weight:bold; color:#ff4757; white-space:pre-wrap;"></div>
-                        <div id="comparison-area" style="display:none; text-align:left; background:#fff4e5; padding:10px; border-radius:10px; margin-top:10px;">
-                            <div style="font-size:12px; color:#e67e22;">今回: <span id="current-user-ans"></span></div>
+                        <div id="answer-display"></div>
+                        <div id="comparison-area" style="display:none;">
+                            <div style="font-size:12px; color:#e67e22; margin-top:5px;">今回: <span id="current-user-ans"></span></div>
                             <div style="font-size:12px; color:#7f8c8d;">前回: <span id="last-user-ans"></span></div>
                         </div>
-                        <button id="edit-toggle-btn" style="margin-top:10px; background:none; border:none; color:#aaa; text-decoration:underline;" onclick="toggleEditMode()">内容を修正する</button>
+                        <button id="edit-toggle-btn" style="margin-top:10px; background:none; border:none; color:#aaa; text-decoration:underline; cursor:pointer;" onclick="toggleEditMode()">内容を修正する</button>
                         <div id="edit-mode-area" style="display:none;">
-                            <textarea id="answer-edit"></textarea>
+                            <textarea id="answer-edit" style="margin-top:10px;"></textarea>
                             <button class="show-btn" style="font-size:14px; margin-top:10px;" onclick="updateCurrentCardContent()">修正を保存 (即時同期)</button>
                         </div>
                     </div>
@@ -80,13 +87,20 @@
                 <button class="eval-btn good" onclick="handleEval('オッケー')">OK</button>
                 <button class="eval-btn perfect" onclick="handleEval('完璧')">完璧</button>
             </div>
+
+            <div class="stats-grid">
+                <div class="stat-item"><span class="label">合計</span><span id="statTotal">0</span></div>
+                <div class="stat-item"><span class="label">ダメ</span><span id="statBad">0</span></div>
+                <div class="stat-item"><span class="label">OK</span><span id="statGood">0</span></div>
+                <div class="stat-item"><span class="label">完璧</span><span id="statPerfect">0</span></div>
+            </div>
         </div>
 
         <div id="view-add" class="view">
             <button class="top-left-back" onclick="changeView('view-submenu')">← 戻る</button>
             <h2>新規追加</h2>
-            <textarea id="new-q" placeholder="問題"></textarea><br><br>
-            <textarea id="new-a" placeholder="答え"></textarea><br><br>
+            <textarea id="new-q" style="min-height:80px;" placeholder="問題"></textarea><br><br>
+            <textarea id="new-a" style="min-height:120px;" placeholder="答え"></textarea><br><br>
             <button class="show-btn" style="background:#2ed573" onclick="addNewCard()">即時追加</button>
         </div>
 
