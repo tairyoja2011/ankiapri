@@ -37,13 +37,23 @@
         .stat-item { background: white; padding: 10px 2px; border-radius: 12px; font-size: 12px; box-shadow: 0 2px 5px rgba(0,0,0,0.03); }
         .label { font-size: 9px; color: #aaa; display:block; }
 
-        /*設問と解答の文字を大きくする*/
-
-        /* 強制的に大きく・赤く上書きする設定 */
-        #question, #answer-display, .list-q, .list-a {
-            font-size: 30px !important;
-            color: #ff0000 !important;               }
-
+          /* index.html の <style> 内 */
+        
+        /* 問題文（表）の設定 */
+        #question { 
+            font-size: 40px;      /* 24pxから32pxに拡大 */
+            font-weight: bold; 
+            color: #ff4757;       /* 青や黒から「赤」に変更 */
+            line-height: 1.4; 
+        }
+        
+        /* 答え（裏）の設定 */
+        #answer-display { 
+            font-size: 40px;      /* 26pxから32pxに拡大 */
+            font-weight: bold; 
+            color: #ff4757;       /* 既に赤系ですが、より鮮やかな赤にするなら #ff0000 */
+            white-space: pre-wrap; 
+        }
 
 
         
@@ -125,6 +135,7 @@
     <script src="script.js"></script>
 </body>
 </html>
+
 
 
 
