@@ -19,18 +19,16 @@ function showSubMenu(title) {
 }
 
 async function loadData() {
-    try {
-        const res = await fetch(READ_URL);
-        const csv = await res.text();
-        const rows = csv.split(/\r?\n/).slice(1);
-        allCards = rows.filter(r => r.trim()).map(r => {
-            const c = r.split(',');
-            return {
-                q: c[0]?.trim(), a: c[1]?.trim(), status: c[2]?.trim() || "未回答",
-                bad: Number(c[3])||0, good: Number(c[4])||0, perfect: Number(c[5])||0, total: Number(c[6])||0
-            };
-        });
-    } catch(e) { alert("データの読み込みに失敗しました"); }
+    const res = await fetch(READ_URL);
+    const csv = await res.text();
+    const rows = csv.split(/\r?\n/).slice(1);
+    allCards = rows.filter(r => r.trim()).map(r => {
+        const c = r.split(',');
+        return {
+            q: c[0]?.trim(), a: c[1]?.trim(), status: c[2]?.trim() || "未回答",
+            bad: Number(c[3])||0, good: Number(c[4])||0, perfect: Number(c[5])||0, total: Number(c[6])||0
+        };
+    });
 }
 
 function prepareQueue(type) {
@@ -49,7 +47,7 @@ async function startStudyMode(type) {
     isInputMode = false;
     await loadData();
     prepareQueue(type);
-    if (queue.length === 0) return alert("対象の問題がありません");
+    if (queue.length === 0) return alert("対象がありません");
     changeView('view-study');
     showNext();
 }
@@ -58,7 +56,7 @@ async function startInputMode() {
     isInputMode = true;
     await loadData();
     prepareQueue('all');
-    if (queue.length === 0) return alert("対象の問題がありません");
+    if (queue.length === 0) return alert("対象がありません");
     changeView('view-study');
     showNext();
 }
@@ -72,9 +70,12 @@ function showNext() {
     }
     currentCard = queue.shift();
     document.getElementById("question").textContent = currentCard.q;
+    
+    // 表示用と編集用の両方にセット
+    document.getElementById("answer-display").textContent = currentCard.a;
     document.getElementById("answer-edit").value = currentCard.a;
     
-    // 統計表示
+    // 統計更新
     document.getElementById("statTotal").textContent = currentCard.total;
     document.getElementById("statBad").textContent = currentCard.bad;
     document.getElementById("statGood").textContent = currentCard.good;
@@ -84,6 +85,8 @@ function showNext() {
     document.getElementById("user-input-area").style.display = isInputMode ? "block" : "none";
     document.getElementById("user-answer-input").value = "";
     document.getElementById("answer-container").style.display = "none";
+    document.getElementById("edit-mode-area").style.display = "none";
+    document.getElementById("edit-toggle-btn").style.display = "block";
     document.getElementById("comparison-area").style.display = "none";
     document.getElementById("showAnswerBtn").style.display = "block";
     document.getElementById("evalContainer").style.display = "none";
@@ -94,11 +97,9 @@ function flipCard() {
         const inputVal = document.getElementById("user-answer-input").value.trim();
         const displayVal = inputVal === "" ? "(未入力)" : inputVal;
         document.getElementById("current-user-ans").textContent = displayVal;
-        
         const key = "last_ans_" + currentCard.q;
         const lastVal = localStorage.getItem(key) || "(記録なし)";
         document.getElementById("last-user-ans").textContent = lastVal;
-        
         if (inputVal !== "") localStorage.setItem(key, inputVal);
         document.getElementById("comparison-area").style.display = "block";
     }
@@ -107,43 +108,43 @@ function flipCard() {
     document.getElementById("evalContainer").style.display = "flex";
 }
 
+// 【修正】編集モードの切り替え
+function toggleEditMode() {
+    document.getElementById("edit-mode-area").style.display = "block";
+    document.getElementById("edit-toggle-btn").style.display = "none";
+    document.getElementById("answer-display").style.display = "none";
+}
+
+async function updateCurrentCardContent() {
+    const newA = document.getElementById("answer-edit").value;
+    if(!confirm("内容を更新しますか？")) return;
+    
+    // UI更新
+    document.getElementById("answer-display").textContent = newA;
+    document.getElementById("edit-mode-area").style.display = "none";
+    document.getElementById("edit-toggle-btn").style.display = "block";
+    document.getElementById("answer-display").style.display = "block";
+    
+    // GAS送信
+    fetch(WRITE_URL, { method: "POST", mode: "no-cors", body: JSON.stringify({ action: "update_content", word: currentCard.q, new_answer: newA }) });
+    currentCard.a = newA;
+}
+
 async function handleEval(rating) {
     fetch(WRITE_URL, { method: "POST", mode: "no-cors", body: JSON.stringify({ word: currentCard.q, status: rating }) });
     if (rating === 'ダメ') queue.splice(1, 0, currentCard);
     showNext();
 }
 
-async function updateCurrentCardContent() {
-    const newA = document.getElementById("answer-edit").value;
-    if(!confirm("スプレッドシートの答えを更新しますか？")) return;
-    const btn = document.querySelector(".update-btn");
-    const originalText = btn.textContent;
-    btn.textContent = "保存中...";
-    try {
-        await fetch(WRITE_URL, { method: "POST", mode: "no-cors", body: JSON.stringify({ action: "update_content", word: currentCard.q, new_answer: newA }) });
-        currentCard.a = newA;
-        btn.textContent = "保存完了";
-    } catch(e) { alert("失敗しました"); }
-    setTimeout(()=> btn.textContent = originalText, 2000);
-}
-
 async function startListMode() {
     await loadData();
     changeView('view-list');
     const container = document.getElementById('list-container');
-    const total = allCards.length;
-    document.getElementById('list-title').textContent = `一覧 (${total})`;
     container.innerHTML = allCards.map((c, i) => `
         <div class="list-item">
-            <div style="font-size:11px; color:#aaa; margin-bottom:5px;">No. ${i+1} / ${total}</div>
-            <div style="font-weight:bold; font-size:17px; color:#333;">${c.q}</div>
-            <div style="color:#ff4757; font-size:15px; margin-top:5px; font-weight:bold;">${c.a}</div>
-            <div class="list-stats">
-                <span style="color:#ff4757;">✖: ${c.bad}</span>
-                <span style="color:#ffa502;">OK: ${c.good}</span>
-                <span style="color:#2ed573;">★: ${c.perfect}</span>
-                <span style="margin-left:auto; color:#999;">計: ${c.total}回</span>
-            </div>
+            <div style="font-size:11px; color:#aaa; margin-bottom:5px;">No. ${i+1}</div>
+            <div style="font-weight:bold; font-size:17px;">${c.q}</div>
+            <div style="color:#ff4757; font-size:15px; margin-top:4px;">${c.a}</div>
         </div>
     `).join('');
 }
