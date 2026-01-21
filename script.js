@@ -145,13 +145,19 @@ async function startListMode() {
     await loadData();
     changeView('view-list');
     const container = document.getElementById('list-container');
+    const total = allCards.length;
+    document.getElementById('list-title').textContent = `一覧 (${total}問)`;
+    
     container.innerHTML = allCards.map((c, i) => `
         <div class="list-item">
-            <div style="font-size:10px; color:#aaa;">No. ${i+1}</div>
+            <div style="font-size:10px; color:#aaa; margin-bottom:5px;">No. ${i+1}</div>
             <div class="list-q">${c.q}</div>
             <div class="list-a">${c.a}</div>
             <div class="list-stats-row">
-                <span>✖: ${c.bad}</span> <span>OK: ${c.good}</span> <span>★: ${c.perfect}</span> <span style="margin-left:auto;">計: ${c.total}回</span>
+                <span class="stat-badge badge-bad">✖ ${c.bad}</span>
+                <span class="stat-badge badge-good">OK ${c.good}</span>
+                <span class="stat-badge badge-perfect">★ ${c.perfect}</span>
+                <span class="stat-badge badge-total" style="margin-left:auto;">計 ${c.total}回</span>
             </div>
         </div>
     `).join('');
@@ -163,3 +169,4 @@ async function resetAllStats() {
     alert("リセット完了しました");
     location.reload();
 }
+
