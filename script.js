@@ -1,199 +1,140 @@
-// --- 設定エリア ---
 const READ_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQiBU73LGsFHvtGPvST1fPIxvetpofBMFpKeQTLHBZN0wtMPOQKJnTbzjTcCNTew5fiVwXoVL1dlPQB/pub?gid=0&single=true&output=csv";
 const WRITE_URL = "https://script.google.com/macros/s/AKfycbzxEnfw0-oIgZ_cPZriklw73B49bhDq8zXXRUT5qEu6mQwHbyeS3Q-EYjmNeULDdYCl/exec";
 
 let allCards = [];
 let queue = [];
 let currentCard = null;
+let isInputMode = false;
 
-const questionEl = document.getElementById("question");
-const answerContainer = document.getElementById("answer-container");
-const answerEdit = document.getElementById("answer-edit");
-const statsArea = document.getElementById("statsArea");
-const showAnswerBtn = document.getElementById("showAnswerBtn");
-const evalContainer = document.getElementById("evalContainer");
-const saveStatusEl = document.getElementById("saveStatus");
-
-// --- 画面切り替え ---
-function changeView(viewId) {
+function changeView(id) {
     document.querySelectorAll('.view').forEach(v => v.style.display = 'none');
-    const target = document.getElementById(viewId);
-    if (target) target.style.display = 'block';
+    document.getElementById(id).style.display = 'block';
+    window.scrollTo(0,0);
 }
 
-function showSubMenu(bookName) {
-    document.getElementById('selected-book-title').textContent = bookName;
+function showSubMenu(title) {
+    isInputMode = false;
+    document.getElementById('selected-book-title').textContent = title;
     changeView('view-submenu');
 }
 
-async function startStudyMode(filterType) {
-    changeView('view-study');
-    if (allCards.length === 0) await loadData();
-    prepareQueue(filterType);
-    if (queue.length === 0) {
-        alert("該当する問題がありません。");
-        changeView('view-submenu');
-        return;
-    }
-    showNextCard();
-}
-
-async function startListMode() {
-    changeView('view-list');
-    if (allCards.length === 0) await loadData();
-    renderList();
-}
-
-// --- データ処理 ---
 async function loadData() {
-    try {
-        saveStatusEl.textContent = "データ同期中...";
-        const response = await fetch(READ_URL);
-        const csvText = await response.text();
-        const rows = csvText.split(/\r?\n/).slice(1); 
-        allCards = rows.filter(row => row.trim() !== "").map(row => {
-            const cols = row.split(',');
-            return { 
-                q: cols[0]?.trim() || "", 
-                a: cols[1]?.trim() || "", 
-                status: cols[2]?.trim() || "未着手",
-                bad: Number(cols[3]) || 0,
-                good: Number(cols[4]) || 0,
-                perfect: Number(cols[5]) || 0,
-                total: Number(cols[6]) || 0
-            };
-        });
-        saveStatusEl.textContent = "";
-    } catch (error) { saveStatusEl.textContent = "読み込み失敗"; }
+    const res = await fetch(READ_URL);
+    const csv = await res.text();
+    const rows = csv.split(/\r?\n/).slice(1);
+    allCards = rows.filter(r => r.trim()).map(r => {
+        const c = r.split(',');
+        return {
+            q: c[0]?.trim(), a: c[1]?.trim(), status: c[2]?.trim() || "未回答",
+            bad: Number(c[3])||0, good: Number(c[4])||0, perfect: Number(c[5])||0, total: Number(c[6])||0
+        };
+    });
 }
 
-function prepareQueue(filterType) {
-    const localPerfectList = JSON.parse(localStorage.getItem('perfectCards') || "[]");
-    if (filterType === 'bad') {
-        queue = allCards.filter(card => card.bad > 0);
-    } else if (filterType === 'good-perfect') {
-        queue = allCards.filter(card => card.good > 0 || card.perfect > 0 || localPerfectList.includes(card.q));
+function prepareQueue(type) {
+    const localPerfect = JSON.parse(localStorage.getItem('perfectCards') || "[]");
+    if (type === 'bad') {
+        queue = allCards.filter(c => c.bad > 0 || c.status === "未回答" || c.status === "未着手" || c.status === "");
+    } else if (type === 'good-perfect') {
+        queue = allCards.filter(c => c.good > 0 || c.perfect > 0 || localPerfect.includes(c.q));
     } else {
-        queue = allCards.filter(card => card.status !== "完璧" && !localPerfectList.includes(card.q));
+        queue = allCards.filter(c => c.status !== "完璧" && !localPerfect.includes(c.q));
     }
-    shuffleArray(queue);
+    queue.sort(() => Math.random() - 0.5);
 }
 
-function shuffleArray(array) {
-    for (let i = array.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [array[i], array[j]] = [array[j], array[i]];
-    }
+async function startStudyMode(type) {
+    isInputMode = false;
+    await loadData();
+    prepareQueue(type);
+    if (queue.length === 0) return alert("対象がありません");
+    changeView('view-study');
+    showNext();
 }
 
-// --- 回答モード ---
-function updateStatsDisplay(card) {
-    document.getElementById("statStatus").textContent = card.status;
-    document.getElementById("statTotal").textContent = card.total;
-    document.getElementById("statBad").textContent = card.bad;
-    document.getElementById("statGood").textContent = card.good;
-    document.getElementById("statPerfect").textContent = card.perfect;
+async function startInputMode() {
+    isInputMode = true;
+    await loadData();
+    prepareQueue('all');
+    if (queue.length === 0) return alert("対象がありません");
+    changeView('view-study');
+    showNext();
 }
 
-function showNextCard() {
+function showNext() {
     if (queue.length === 0) {
-        questionEl.textContent = "全問完了！ 🎉";
-        answerContainer.style.display = "none";
-        statsArea.style.display = "none";
-        showAnswerBtn.style.display = "none";
-        evalContainer.style.display = "none";
+        document.getElementById("question").textContent = "全問終了！";
+        document.getElementById("evalContainer").style.display = "none";
+        document.getElementById("showAnswerBtn").style.display = "none";
         return;
     }
     currentCard = queue.shift();
-    questionEl.textContent = currentCard.q;
-    answerEdit.value = currentCard.a;
-    updateStatsDisplay(currentCard);
-    answerContainer.style.display = "none";
-    statsArea.style.display = "grid";
-    showAnswerBtn.style.display = "block";
-    evalContainer.style.display = "none";
+    document.getElementById("question").textContent = currentCard.q;
+    document.getElementById("answer-edit").value = currentCard.a;
+    
+    // 統計更新
+    document.getElementById("statTotal").textContent = currentCard.total;
+    document.getElementById("statBad").textContent = currentCard.bad;
+    document.getElementById("statGood").textContent = currentCard.good;
+    document.getElementById("statPerfect").textContent = currentCard.perfect;
+
+    // 表示リセット
+    document.getElementById("user-input-area").style.display = isInputMode ? "block" : "none";
+    document.getElementById("user-answer-input").value = "";
+    document.getElementById("answer-container").style.display = "none";
+    document.getElementById("comparison-area").style.display = "none";
+    document.getElementById("showAnswerBtn").style.display = "block";
+    document.getElementById("evalContainer").style.display = "none";
 }
 
 function flipCard() {
-    answerContainer.style.display = "block";
-    showAnswerBtn.style.display = "none";
-    evalContainer.style.display = "flex";
-}
-
-// 回答修正
-async function updateCurrentCardContent() {
-    const newAnswer = answerEdit.value;
-    if (newAnswer === currentCard.a) return;
-    if (!confirm("スプレッドシートの答えを更新しますか？")) return;
-    saveStatusEl.textContent = "更新中...";
-    try {
-        await fetch(WRITE_URL, {
-            method: "POST", mode: "no-cors",
-            body: JSON.stringify({ action: "update_content", word: currentCard.q, new_answer: newAnswer })
-        });
-        currentCard.a = newAnswer;
-        saveStatusEl.textContent = "更新完了";
-        setTimeout(() => saveStatusEl.textContent = "", 1500);
-    } catch (e) { saveStatusEl.textContent = "更新失敗"; }
-}
-
-function handleEval(rating) {
-    currentCard.status = rating;
-    currentCard.total += 1;
-    if (rating === 'ダメ') currentCard.bad += 1;
-    if (rating === 'オッケー') currentCard.good += 1;
-    if (rating === '完璧') currentCard.perfect += 1;
-    updateStatsDisplay(currentCard);
-    saveToSheet(currentCard.q, rating); 
-    if (rating === 'ダメ') queue.splice(1, 0, currentCard);
-    else if (rating === 'オッケー') queue.push(currentCard);
-    showNextCard();
-}
-
-async function saveToSheet(word, rating) {
-    if (rating === '完璧') {
-        const list = JSON.parse(localStorage.getItem('perfectCards') || "[]");
-        list.push(word);
-        localStorage.setItem('perfectCards', JSON.stringify(list));
+    if (isInputMode) {
+        const inputVal = document.getElementById("user-answer-input").value.trim();
+        const displayVal = inputVal === "" ? "(未入力)" : inputVal;
+        document.getElementById("current-user-ans").textContent = displayVal;
+        
+        const key = "last_ans_" + currentCard.q;
+        const lastVal = localStorage.getItem(key) || "(記録なし)";
+        document.getElementById("last-user-ans").textContent = lastVal;
+        
+        // 空欄でなければ次回の比較用に保存
+        if (inputVal !== "") localStorage.setItem(key, inputVal);
+        document.getElementById("comparison-area").style.display = "block";
     }
-    try {
-        await fetch(WRITE_URL, { method: "POST", mode: "no-cors",
-            body: JSON.stringify({ word: word, status: rating })
-        });
-    } catch (e) { console.error(e); }
+    document.getElementById("answer-container").style.display = "block";
+    document.getElementById("showAnswerBtn").style.display = "none";
+    document.getElementById("evalContainer").style.display = "flex";
 }
 
-// --- 一覧表示 (No.付/詳細統計) ---
-function renderList() {
+async function handleEval(rating) {
+    fetch(WRITE_URL, { method: "POST", mode: "no-cors", body: JSON.stringify({ word: currentCard.q, status: rating }) });
+    if (rating === 'ダメ') queue.splice(1, 0, currentCard);
+    showNext();
+}
+
+async function updateCurrentCardContent() {
+    const newA = document.getElementById("answer-edit").value;
+    if(!confirm("内容を更新しますか？")) return;
+    const btn = document.querySelector(".update-btn");
+    btn.textContent = "保存中...";
+    await fetch(WRITE_URL, { method: "POST", mode: "no-cors", body: JSON.stringify({ action: "update_content", word: currentCard.q, new_answer: newA }) });
+    currentCard.a = newA;
+    btn.textContent = "保存完了";
+    setTimeout(()=> btn.textContent="内容を修正して保存", 2000);
+}
+
+async function startListMode() {
+    await loadData();
+    changeView('view-list');
     const container = document.getElementById('list-container');
-    const total = allCards.length;
-    document.getElementById('list-title').textContent = `単語一覧 (${total})`;
-    container.innerHTML = allCards.map((card, idx) => `
-        <div class="list-item" style="border-left: 5px solid ${card.status==='完璧'?'#2ed573':'#007aff'};">
-            <div style="display:flex; justify-content:space-between; font-size:11px; color:#aaa; margin-bottom:5px;">
-                <span>No. ${idx + 1} / ${total}</span>
-                <span style="background:#eee; padding:2px 6px; border-radius:5px;">${card.status}</span>
-            </div>
-            <div style="font-weight:bold; color:#333; font-size:17px; margin-bottom:5px;">${card.q}</div>
-            <div style="color:#ff4757; font-size:15px; margin-bottom:10px;">${card.a}</div>
-            <div style="display:flex; gap:12px; font-size:11px; color:#666; border-top:1px dotted #eee; padding-top:8px;">
-                <span style="color:#ff4757;">✖ ${card.bad}</span>
-                <span style="color:#ffa502;">OK ${card.good}</span>
-                <span style="color:#2ed573;">★ ${card.perfect}</span>
-                <span style="margin-left:auto; color:#999;">計 ${card.total}回</span>
+    container.innerHTML = allCards.map((c, i) => `
+        <div class="list-item">
+            <div style="font-size:11px; color:#aaa; margin-bottom:5px;">No. ${i+1}</div>
+            <div style="font-weight:bold; font-size:16px;">${c.q}</div>
+            <div style="color:#ff4757; font-size:14px; margin-top:4px;">${c.a}</div>
+            <div class="list-stats">
+                <span>✖: ${c.bad}</span> <span>OK: ${c.good}</span> <span>★: ${c.perfect}</span> <span>計: ${c.total}</span>
             </div>
         </div>
     `).join('');
-}
-
-async function resetAllStats() {
-    if (!confirm("履歴をすべてリセットしますか？")) return;
-    saveStatusEl.textContent = "リセット中...";
-    localStorage.removeItem('perfectCards');
-    try {
-        await fetch(WRITE_URL, { method: "POST", mode: "no-cors",
-            body: JSON.stringify({ action: "reset_all" })
-        });
-        location.reload();
-    } catch (e) { alert("失敗"); }
 }
