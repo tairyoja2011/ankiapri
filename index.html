@@ -3,47 +3,59 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>My暗記アプリ v4.2</title>
+    <title>My暗記アプリ v4.3</title>
     <style>
-        body { font-family: -apple-system, sans-serif; background: #f0f2f5; margin: 0; padding: 0; }
+        /* 基本レイアウト */
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f0f2f5; margin: 0; padding: 0; }
         .container { width: 95%; max-width: 500px; margin: 0 auto; padding: 20px 0 100px; text-align: center; }
         .view { display: none; width: 100%; }
         
-        /* メニュー・カード */
+        /* メニューボタン */
         .menu-card { background: white; padding: 35px 20px; border-radius: 25px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); border: 2px solid #007aff; color: #007aff; font-size: 20px; font-weight: bold; width: 100%; margin-bottom: 20px; cursor: pointer; }
-        .show-btn { background: #007aff; color: white; width: 100%; padding: 18px; border-radius: 15px; font-size: 18px; font-weight: bold; margin-bottom: 15px; border: none; cursor: pointer; }
+        .show-btn { background: #007aff; color: white; width: 100%; padding: 18px; border-radius: 15px; font-size: 18px; font-weight: bold; margin-bottom: 15px; border: none; cursor: pointer; transition: 0.2s; }
+        .show-btn:active { opacity: 0.8; transform: scale(0.98); }
         .back-link { background: none; border: none; color: #007aff; font-size: 14px; margin-bottom: 15px; text-decoration: underline; padding: 10px; cursor: pointer; }
 
-        /* 回答エリア（大幅拡大） */
-        #card { background: white; min-height: 250px; padding: 25px; border-radius: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); display: flex; align-items: center; justify-content: center; margin-bottom: 20px; }
-        #question { font-size: 26px; font-weight: bold; color: #333; line-height: 1.4; }
+        /* カード・回答エリア */
+        #card { background: white; min-height: 280px; padding: 25px; border-radius: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); display: flex; align-items: center; justify-content: center; margin-bottom: 20px; }
+        #question { font-size: 24px; font-weight: bold; color: #333; line-height: 1.4; margin-bottom: 10px; }
         
-        /* 回答表示（大きく表示） */
-        #answer-display { font-size: 28px; font-weight: bold; color: #ff4757; margin: 20px 0; word-break: break-all; line-height: 1.3; }
-        
-        /* 編集エリア（通常は隠す） */
-        #edit-mode-area { display: none; margin-top: 10px; }
-        #answer-edit { width: 100%; min-height: 120px; font-size: 20px; border: 2px solid #007aff; padding: 10px; border-radius: 12px; text-align: center; color: #333; box-sizing: border-box; }
-        
-        #user-answer-input { width: 90%; padding: 15px; border-radius: 12px; border: 2px solid #ff9500; font-size: 18px; margin-top: 10px; outline: none; box-sizing: border-box; }
+        /* 入力モード用の広めの入力欄 */
+        #user-answer-input { 
+            width: 100%; min-height: 140px; padding: 15px; border-radius: 15px; 
+            border: 2px solid #ff9500; font-size: 18px; outline: none; box-sizing: border-box; 
+            font-family: inherit; background: #fffaf4;
+        }
 
-        .update-toggle-btn { background: none; border: none; color: #aaa; font-size: 12px; text-decoration: underline; margin-top: 15px; cursor: pointer; }
-        .save-btn { display: block; width: 100%; margin-top: 10px; padding: 12px; background: #007aff; color: white; border-radius: 10px; font-weight: bold; border: none; }
+        /* 正解表示（大きく、赤く） */
+        #answer-display { font-size: 28px; font-weight: bold; color: #ff4757; margin: 20px 0; word-break: break-all; line-height: 1.3; white-space: pre-wrap; }
+        
+        /* 編集エリア */
+        #edit-mode-area { display: none; margin-top: 10px; width: 100%; }
+        #answer-edit { width: 100%; min-height: 150px; font-size: 18px; border: 2px solid #007aff; padding: 12px; border-radius: 12px; text-align: left; color: #333; box-sizing: border-box; font-family: inherit; }
+        
+        .update-toggle-btn { background: none; border: none; color: #aaa; font-size: 13px; text-decoration: underline; margin-top: 20px; cursor: pointer; display: block; width: 100%; }
+        .save-btn { display: block; width: 100%; margin-top: 10px; padding: 15px; background: #007aff; color: white; border-radius: 12px; font-weight: bold; border: none; font-size: 16px; }
 
-        /* 判定ボタン */
+        /* 判定ボタンのデザイン復元 */
         .eval-container { display: none; gap: 10px; width: 100%; margin-bottom: 15px; }
         .eval-btn { flex: 1; color: white; padding: 18px 0; border-radius: 15px; font-size: 16px; font-weight: bold; border: none; cursor: pointer; }
         .bad { background: #ff4757; }
         .good { background: #ffa502; }
         .perfect { background: #2ed573; }
 
-        /* 比較エリア */
-        #comparison-area { margin-top: 15px; text-align: left; font-size: 14px; background: #fff4e5; padding: 15px; border-radius: 15px; border: 1px solid #ff9500; }
+        /* 比較エリア（改行維持） */
+        #comparison-area { margin-top: 15px; text-align: left; font-size: 14px; background: #fff4e5; padding: 15px; border-radius: 15px; border: 1px solid #ff9500; white-space: pre-wrap; }
+        .comp-label { font-weight: bold; font-size: 11px; display: block; margin-bottom: 2px; }
 
+        /* 統計 */
         .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-top: 20px; }
         .stat-item { background: white; padding: 10px 2px; border-radius: 12px; box-shadow: 0 2px 5px rgba(0,0,0,0.03); }
         .label { font-size: 9px; color: #aaa; display: block; }
         .val { font-size: 14px; font-weight: bold; }
+
+        /* 一覧表示 */
+        .list-item { background: white; margin-bottom: 15px; padding: 18px; border-radius: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border-left: 6px solid #007aff; text-align: left; }
     </style>
 </head>
 <body>
@@ -69,17 +81,19 @@
             <button class="back-link" onclick="changeView('view-submenu')">← 中止</button>
             <div id="card">
                 <div style="width: 100%;">
-                    <div id="question">...</div>
-                    <div id="user-input-area" style="display:none; margin-top:10px;">
-                        <input type="text" id="user-answer-input" placeholder="答えを入力（空欄OK）">
+                    <div id="question">読み込み中...</div>
+                    
+                    <div id="user-input-area" style="display:none; margin-top:15px;">
+                        <textarea id="user-answer-input" placeholder="ここに答えを入力（空欄で回答もOK）"></textarea>
                     </div>
+
                     <div id="answer-container" style="display:none; margin-top:15px;">
-                        <div style="font-size:11px; color:#aaa;">正解：</div>
+                        <div style="font-size:11px; color:#aaa; text-align:center;">正解：</div>
                         <div id="answer-display"></div>
                         
                         <div id="comparison-area" style="display:none;">
-                            <div style="color:#e67e22;">● 今回の入力: <span id="current-user-ans"></span></div>
-                            <div style="color:#7f8c8d; margin-top:5px;">● 前回の入力: <span id="last-user-ans"></span></div>
+                            <div style="color:#e67e22;"><span class="comp-label">● 今回の入力:</span><span id="current-user-ans"></span></div>
+                            <div style="color:#7f8c8d; margin-top:8px;"><span class="comp-label">● 前回の入力:</span><span id="last-user-ans"></span></div>
                         </div>
 
                         <button id="edit-toggle-btn" class="update-toggle-btn" onclick="toggleEditMode()">内容を修正する</button>
@@ -91,6 +105,7 @@
                     </div>
                 </div>
             </div>
+
             <div class="button-area">
                 <button id="showAnswerBtn" class="show-btn" onclick="flipCard()">答え合わせ</button>
                 <div id="evalContainer" class="eval-container">
@@ -99,6 +114,7 @@
                     <button class="eval-btn perfect" onclick="handleEval('完璧')">完璧</button>
                 </div>
             </div>
+
             <div id="statsArea" class="stats-grid">
                 <div class="stat-item"><span class="label">合計</span><span id="statTotal" class="val">0</span></div>
                 <div class="stat-item"><span class="label">ダメ</span><span id="statBad" class="val">0</span></div>
