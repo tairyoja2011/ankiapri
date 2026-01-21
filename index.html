@@ -4,60 +4,58 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>My暗記アプリ v6.1</title>
-    <style>
-        body { font-family: -apple-system, sans-serif; background: #f0f2f5; margin: 0; padding: 0; }
-        .container { width: 95%; max-width: 500px; margin: 0 auto; padding: 60px 0 100px; text-align: center; position: relative; }
-        .view { display: none; width: 100%; }
-        
-        /* ボタン基本 */
-        .top-left-back { position: absolute; top: 15px; left: 15px; background: #eee; color: #333; padding: 8px 15px; border-radius: 20px; font-size: 13px; border: none; font-weight: bold; cursor: pointer; z-index: 10; }
-        .top-right-sync { position: absolute; top: 15px; right: 15px; background: #2f3542; color: white; padding: 8px 15px; border-radius: 20px; font-size: 13px; border: none; font-weight: bold; cursor: pointer; z-index: 10; }
-        .sync-badge { background: #ff4757; color: white; border-radius: 50%; padding: 2px 6px; font-size: 10px; margin-left: 5px; display: none; }
+<style>
+    /* 基本スタイル */
+    body { font-family: -apple-system, sans-serif; background: #f0f2f5; margin: 0; padding: 0; }
+    .container { width: 95%; max-width: 500px; margin: 0 auto; padding: 60px 0 100px; text-align: center; position: relative; }
+    .view { display: none; width: 100%; }
+    
+    /* ボタン・バッジ */
+    .top-left-back { position: absolute; top: 15px; left: 15px; background: #eee; color: #333; padding: 8px 15px; border-radius: 20px; font-size: 13px; border: none; font-weight: bold; cursor: pointer; z-index: 10; }
+    .top-right-sync { position: absolute; top: 15px; right: 15px; background: #2f3542; color: white; padding: 8px 15px; border-radius: 20px; font-size: 13px; border: none; font-weight: bold; cursor: pointer; z-index: 10; }
+    .sync-badge { background: #ff4757; color: white; border-radius: 50%; padding: 2px 6px; font-size: 10px; margin-left: 5px; display: none; }
 
-        /* カード・入力 */
-        .menu-card { background: white; padding: 35px 20px; border-radius: 25px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); border: 2px solid #007aff; color: #007aff; font-size: 20px; font-weight: bold; width: 100%; margin-bottom: 20px; cursor: pointer; }
-        .show-btn { background: #007aff; color: white; width: 100%; padding: 18px; border-radius: 15px; font-size: 18px; font-weight: bold; margin-bottom: 15px; border: none; cursor: pointer; width: 100%; }
-        #card { background: white; min-height: 250px; padding: 25px; border-radius: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); display: flex; align-items: center; justify-content: center; margin-bottom: 20px; }
-        textarea { width: 100%; padding: 12px; border-radius: 12px; border: 2px solid #ddd; font-size: 16px; box-sizing: border-box; font-family: inherit; }
-        
-        /* 判定ボタン */
-        .eval-container { display: none; gap: 10px; width: 100%; margin-bottom: 15px; }
-        .eval-btn { flex: 1; color: white; padding: 18px 0; border-radius: 15px; font-size: 16px; font-weight: bold; border: none; cursor: pointer; }
-        .bad { background: #ff4757; } .good { background: #ffa502; } .perfect { background: #2ed573; }
+    /* メニュー・カード */
+    .menu-card { background: white; padding: 35px 20px; border-radius: 25px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); border: 2px solid #007aff; color: #007aff; font-size: 20px; font-weight: bold; width: 100%; margin-bottom: 20px; cursor: pointer; }
+    .show-btn { background: #007aff; color: white; width: 100%; padding: 18px; border-radius: 15px; font-size: 18px; font-weight: bold; margin-bottom: 15px; border: none; cursor: pointer; }
+    #card { background: white; min-height: 250px; padding: 25px; border-radius: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); display: flex; align-items: center; justify-content: center; margin-bottom: 20px; }
+    textarea { width: 100%; padding: 12px; border-radius: 12px; border: 2px solid #ddd; font-size: 16px; box-sizing: border-box; font-family: inherit; }
+    
+    /* 判定ボタン */
+    .eval-container { display: none; gap: 10px; width: 100%; margin-bottom: 15px; }
+    .eval-btn { flex: 1; color: white; padding: 18px 0; border-radius: 15px; font-size: 16px; font-weight: bold; border: none; cursor: pointer; }
+    .bad { background: #ff4757; } .good { background: #ffa502; } .perfect { background: #2ed573; }
 
-        /* 一覧バッジ */
-        .list-item { background: white; margin-bottom: 15px; padding: 20px; border-radius: 20px; text-align: left; border-left: 6px solid #007aff; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
-        .list-q { font-weight:bold; font-size:16px; margin-bottom:8px; }
-        .list-a { color:#ff4757; font-size:15px; white-space:pre-wrap; margin-bottom:10px; }
-        .stat-badge { padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: bold; color: white; margin-right: 5px; }
-        .badge-bad { background: #ff4757; } .badge-good { background: #ffa502; } .badge-perfect { background: #2ed573; }
-        
-        /* 統計グリッド（復活） */
-        .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-top: 20px; }
-        .stat-item { background: white; padding: 10px 2px; border-radius: 12px; font-size: 12px; box-shadow: 0 2px 5px rgba(0,0,0,0.03); }
-        .label { font-size: 9px; color: #aaa; display:block; }
+    /* 統計グリッド */
+    .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-top: 20px; }
+    .stat-item { background: white; padding: 10px 2px; border-radius: 12px; font-size: 12px; box-shadow: 0 2px 5px rgba(0,0,0,0.03); }
+    .label { font-size: 9px; color: #aaa; display:block; }
 
-          /* index.html の <style> 内 */
-        
-        /* 問題文（表）の設定 */
-        #question { 
-            font-size: 40px;      /* 24pxから32pxに拡大 */
-            font-weight: bold; 
-            color: #ff4757;       /* 青や黒から「赤」に変更 */
-            line-height: 1.4; 
-        }
-        
-        /* 答え（裏）の設定 */
-        #answer-display { 
-            font-size: 40px;      /* 26pxから32pxに拡大 */
-            font-weight: bold; 
-            color: #ff4757;       /* 既に赤系ですが、より鮮やかな赤にするなら #ff0000 */
-            white-space: pre-wrap; 
-        }
+    /* 一覧表示用 */
+    .list-item { background: white; margin-bottom: 15px; padding: 20px; border-radius: 20px; text-align: left; border-left: 6px solid #007aff; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+    .list-q { font-weight:bold; font-size:20px; margin-bottom:8px; color:#ff4757; }
+    .list-a { color:#ff4757; font-size:18px; white-space:pre-wrap; margin-bottom:10px; }
+    .stat-badge { padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: bold; color: white; margin-right: 5px; }
+    .badge-bad { background: #ff4757; } .badge-good { background: #ffa502; } .badge-perfect { background: #2ed573; }
 
-
-        
-    </style>
+    /* 【ここが重要】出題画面の問題と答えのカスタマイズ */
+    #question { 
+        font-size: 40px !important;
+        font-weight: bold !important;
+        color: #ff4757 !important;
+        line-height: 1.3;
+        word-break: break-all;
+    }
+    
+    #answer-display { 
+        font-size: 40px !important;
+        font-weight: bold !important;
+        color: #ff4757 !important;
+        white-space: pre-wrap;
+        line-height: 1.3;
+        word-break: break-all;
+    }
+</style>
 </head>
 <body>
     <div class="container">
@@ -135,6 +133,7 @@
     <script src="script.js"></script>
 </body>
 </html>
+
 
 
 
