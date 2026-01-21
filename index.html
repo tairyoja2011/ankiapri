@@ -3,35 +3,43 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>My暗記アプリ v4</title>
+    <title>My暗記アプリ v4.1</title>
     <style>
-        body { font-family: -apple-system, sans-serif; background: #f8f9fa; margin: 0; padding: 0; }
+        body { font-family: -apple-system, sans-serif; background: #f0f2f5; margin: 0; padding: 0; }
         .container { width: 95%; max-width: 500px; margin: 0 auto; padding: 20px 0 100px; text-align: center; }
         .view { display: none; width: 100%; }
         
-        /* ボタン・カード共通 */
-        .menu-card { background: white; padding: 30px; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 2px solid #007aff; color: #007aff; font-size: 20px; font-weight: bold; width: 100%; margin-bottom: 15px; cursor: pointer; }
-        .show-btn { background: #007aff; color: white; width: 100%; padding: 18px; border-radius: 15px; font-size: 16px; font-weight: bold; margin-bottom: 10px; border: none; cursor: pointer; }
+        /* メニュー・カード */
+        .menu-card { background: white; padding: 35px 20px; border-radius: 25px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); border: 2px solid #007aff; color: #007aff; font-size: 20px; font-weight: bold; width: 100%; margin-bottom: 20px; cursor: pointer; }
+        .show-btn { background: #007aff; color: white; width: 100%; padding: 18px; border-radius: 15px; font-size: 18px; font-weight: bold; margin-bottom: 15px; border: none; cursor: pointer; }
         .back-link { background: none; border: none; color: #007aff; font-size: 14px; margin-bottom: 15px; text-decoration: underline; padding: 10px; cursor: pointer; }
 
         /* 回答・入力エリア */
-        #card { background: white; min-height: 180px; padding: 25px; border-radius: 25px; box-shadow: 0 8px 20px rgba(0,0,0,0.06); display: flex; align-items: center; justify-content: center; margin-bottom: 20px; }
-        #question { font-size: 22px; font-weight: bold; color: #333; line-height: 1.4; }
-        #user-answer-input { width: 90%; padding: 15px; border-radius: 12px; border: 2px solid #ff9500; font-size: 18px; margin-top: 10px; outline: none; }
-        #answer-edit { width: 100%; min-height: 80px; font-size: 18px; border: 1.5px solid #eee; padding: 12px; border-radius: 12px; text-align: center; color: #ff4757; font-weight: bold; box-sizing: border-box; }
+        #card { background: white; min-height: 220px; padding: 25px; border-radius: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); display: flex; align-items: center; justify-content: center; margin-bottom: 20px; }
+        #question { font-size: 24px; font-weight: bold; color: #333; line-height: 1.4; }
+        #user-answer-input { width: 90%; padding: 15px; border-radius: 12px; border: 2px solid #ff9500; font-size: 18px; margin-top: 10px; outline: none; box-sizing: border-box; }
+        #answer-edit { width: 100%; min-height: 80px; font-size: 20px; border: 1px solid #eee; padding: 10px; border-radius: 12px; text-align: center; color: #ff4757; font-weight: bold; box-sizing: border-box; }
         
         .update-btn { display: block; width: 100%; margin-top: 10px; padding: 10px; background: #f0f7ff; color: #007aff; border: 1px solid #007aff; border-radius: 10px; font-weight: bold; cursor: pointer; }
 
+        /* 判定ボタン（前のデザインを復元） */
+        .eval-container { display: none; gap: 10px; width: 100%; margin-bottom: 15px; }
+        .eval-btn { flex: 1; color: white; padding: 18px 0; border-radius: 15px; font-size: 16px; font-weight: bold; border: none; cursor: pointer; }
+        .bad { background: #ff4757; }
+        .good { background: #ffa502; }
+        .perfect { background: #2ed573; }
+
         /* 比較エリア */
-        #comparison-area { margin-top: 15px; text-align: left; font-size: 14px; background: #fff4e5; padding: 12px; border-radius: 12px; border: 1px solid #ff9500; }
+        #comparison-area { margin-top: 15px; text-align: left; font-size: 14px; background: #fff4e5; padding: 15px; border-radius: 15px; border: 1px solid #ff9500; }
 
         /* 一覧表示 */
-        .list-item { background: white; margin-bottom: 15px; padding: 16px; border-radius: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); border-left: 6px solid #007aff; text-align: left; }
-        .list-stats { display: flex; gap: 10px; font-size: 12px; color: #777; margin-top: 8px; border-top: 1px solid #f0f0f0; padding-top: 8px; }
+        .list-item { background: white; margin-bottom: 15px; padding: 18px; border-radius: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border-left: 6px solid #007aff; text-align: left; }
+        .list-stats { display: flex; gap: 12px; font-size: 11px; color: #666; margin-top: 10px; border-top: 1px solid #eee; padding-top: 10px; }
 
-        .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; margin-top: 20px; }
-        .stat-item { background: white; padding: 10px 2px; border-radius: 12px; font-size: 13px; }
-        .label { font-size: 9px; color: #aaa; }
+        .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-top: 20px; padding: 0 5px; }
+        .stat-item { background: white; padding: 10px 2px; border-radius: 12px; box-shadow: 0 2px 5px rgba(0,0,0,0.03); }
+        .label { font-size: 9px; color: #aaa; display: block; }
+        .val { font-size: 14px; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -59,7 +67,7 @@
                 <div style="width: 100%;">
                     <div id="question">...</div>
                     <div id="user-input-area" style="display:none; margin-top:10px;">
-                        <input type="text" id="user-answer-input" placeholder="わからなければ空欄でOK">
+                        <input type="text" id="user-answer-input" placeholder="答えを入力（空欄OK）">
                     </div>
                     <div id="answer-container" style="display:none; margin-top:15px;">
                         <div style="font-size:11px; color:#aaa; margin-bottom:4px;">正解：</div>
@@ -74,17 +82,17 @@
             </div>
             <div class="button-area">
                 <button id="showAnswerBtn" class="show-btn" onclick="flipCard()">答え合わせ</button>
-                <div id="evalContainer" style="display:none; gap:10px;">
-                    <button class="show-btn" style="background:#ff4757; flex:1;" onclick="handleEval('ダメ')">ダメ</button>
-                    <button class="show-btn" style="background:#ffa502; flex:1;" onclick="handleEval('オッケー')">OK</button>
-                    <button class="show-btn" style="background:#2ed573; flex:1;" onclick="handleEval('完璧')">完璧</button>
+                <div id="evalContainer" class="eval-container">
+                    <button class="eval-btn bad" onclick="handleEval('ダメ')">ダメ</button>
+                    <button class="eval-btn good" onclick="handleEval('オッケー')">OK</button>
+                    <button class="eval-btn perfect" onclick="handleEval('完璧')">完璧</button>
                 </div>
             </div>
             <div id="statsArea" class="stats-grid">
-                <div class="stat-item"><span class="label">合計</span><span id="statTotal">0</span></div>
-                <div class="stat-item"><span class="label">ダメ</span><span id="statBad">0</span></div>
-                <div class="stat-item"><span class="label">OK</span><span id="statGood">0</span></div>
-                <div class="stat-item"><span class="label">完璧</span><span id="statPerfect">0</span></div>
+                <div class="stat-item"><span class="label">合計</span><span id="statTotal" class="val">0</span></div>
+                <div class="stat-item"><span class="label">ダメ</span><span id="statBad" class="val">0</span></div>
+                <div class="stat-item"><span class="label">OK</span><span id="statGood" class="val">0</span></div>
+                <div class="stat-item"><span class="label">完璧</span><span id="statPerfect" class="val">0</span></div>
             </div>
         </div>
 
