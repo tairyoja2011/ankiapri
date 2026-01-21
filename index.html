@@ -1,50 +1,132 @@
-<div class="container">
-    <div id="view-top" class="view">
-        <h1>単語帳メニュー</h1>
-        <div class="button-area">
-            <button class="show-btn" onclick="showSubMenu('応用情報')">応用情報</button>
-        </div>
-    </div>
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>My暗記アプリ Pro</title>
+    <style>
+        body { 
+            font-family: -apple-system, "Helvetica Neue", Arial, sans-serif; 
+            text-align: center; background: #f0f2f5; margin: 0; padding: 0;
+            min-height: 100vh; display: flex; flex-direction: column; align-items: center;
+        }
+        .container { width: 90%; max-width: 400px; padding-top: 40px; padding-bottom: 100px; }
+        
+        /* 画面切り替え用の設定 */
+        .view { width: 100%; display: none; }
+        
+        /* トップメニューのデザイン */
+        h1 { color: #333; font-size: 24px; margin-bottom: 40px; }
+        .menu-card {
+            background: white; padding: 40px 20px; border-radius: 25px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05); border: 2px solid #007aff;
+            color: #007aff; font-size: 22px; font-weight: bold; width: 100%;
+            cursor: pointer; transition: transform 0.2s; margin-bottom: 20px;
+        }
+        .menu-card:active { transform: scale(0.95); background: #f0f7ff; }
 
-    <div id="view-submenu" class="view" style="display:none">
-        <button class="back-link" onclick="changeView('view-top')">← トップへ戻る</button>
-        <h2 id="selected-book-title">応用情報</h2>
-        <div class="button-area">
-            <button class="show-btn" onclick="startStudyMode()">回答モード</button>
-            <button class="show-btn" style="background:#888" onclick="startListMode()">一覧モード</button>
-        </div>
-    </div>
+        /* サブメニュー・回答モードの共通デザイン */
+        .back-link {
+            background: none; border: none; color: #007aff; font-size: 14px;
+            margin-bottom: 20px; cursor: pointer; display: block; text-decoration: underline;
+        }
+        #card { 
+            background: white; min-height: 250px; margin-bottom: 20px; 
+            padding: 20px; border-radius: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); 
+            display: flex; align-items: center; justify-content: center; 
+        }
+        #question { font-size: 28px; font-weight: bold; color: #333; }
+        #answer { font-size: 22px; color: #ff4757; font-weight: bold; margin-top: 15px; }
 
-    <div id="view-study" class="view" style="display:none">
-        <button class="back-link" onclick="changeView('view-submenu')">← 戻る</button>
-        <div id="card">
-            <div style="width: 100%;">
-                <div id="question">読み込み中...</div>
-                <div id="answer" style="display:none;"></div>
+        /* ボタン類 */
+        .button-area { display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px; }
+        button { border: none; padding: 18px; border-radius: 15px; font-size: 18px; font-weight: bold; cursor: pointer; }
+        .show-btn { background: #007aff; color: white; width: 100%; }
+        .eval-container { display: none; gap: 10px; width: 100%; }
+        .eval-btn { flex: 1; color: white; font-size: 14px; }
+        .bad { background: #ff4757; }
+        .good { background: #ffa502; }
+        .perfect { background: #2ed573; }
+
+        /* 統計エリア */
+        .stats-grid { 
+            display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; 
+            padding: 15px; background: rgba(255, 255, 255, 0.6); border-radius: 15px; 
+        }
+        .stat-item { 
+            background: white; padding: 8px 2px; border-radius: 10px; 
+            display: flex; flex-direction: column; align-items: center; 
+        }
+        .label { font-size: 9px; color: #888; }
+        .val { font-size: 13px; font-weight: bold; color: #444; }
+        .stat-item.full { grid-column: 1 / span 4; background: #eef2ff; margin-bottom: 4px; }
+
+        /* 一覧表示用 */
+        .list-item {
+            background: white; margin: 12px 0; padding: 18px; border-radius: 15px;
+            text-align: left; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border-left: 5px solid #007aff;
+        }
+
+        #saveStatus { font-size: 12px; color: #aaa; margin-top: 10px; height: 1.5em; }
+        .reset-link { 
+            position: fixed; bottom: 10px; left: 0; width: 100%; 
+            color: #ff4757; font-size: 11px; text-decoration: underline; 
+            background: none; border: none; opacity: 0.7; 
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div id="view-top" class="view" style="display:block">
+            <h1>単語帳メニュー</h1>
+            <button class="menu-card" onclick="showSubMenu('応用情報')">応用情報</button>
+        </div>
+
+        <div id="view-submenu" class="view">
+            <button class="back-link" onclick="changeView('view-top')">← トップへ戻る</button>
+            <h2 id="selected-book-title">応用情報</h2>
+            <div class="button-area">
+                <button class="show-btn" onclick="startStudyMode()">回答モード開始</button>
+                <button class="show-btn" style="background:#666" onclick="startListMode()">一覧を表示する</button>
             </div>
         </div>
-        <div class="button-area">
-            <button id="showAnswerBtn" class="show-btn" onclick="flipCard()">答えを見る</button>
-            <div id="evalContainer" class="eval-container">
-                <button class="eval-btn bad" onclick="handleEval('ダメ')">ダメ</button>
-                <button class="eval-btn good" onclick="handleEval('オッケー')">オッケー</button>
-                <button class="eval-btn perfect" onclick="handleEval('完璧')">完璧</button>
+
+        <div id="view-study" class="view">
+            <button class="back-link" onclick="changeView('view-submenu')">← 終了する</button>
+            <div id="card">
+                <div style="width: 100%;">
+                    <div id="question">読み込み中...</div>
+                    <div id="answer" style="display:none;"></div>
+                </div>
+            </div>
+            <div class="button-area">
+                <button id="showAnswerBtn" class="show-btn" onclick="flipCard()">答えを見る</button>
+                <div id="evalContainer" class="eval-container">
+                    <button class="eval-btn bad" onclick="handleEval('ダメ')">ダメ</button>
+                    <button class="eval-btn good" onclick="handleEval('オッケー')">オッケー</button>
+                    <button class="eval-btn perfect" onclick="handleEval('完璧')">完璧</button>
+                </div>
+            </div>
+            <div id="statsArea" class="stats-grid">
+                <div class="stat-item full"><span class="label">ステータス</span><span id="statStatus" class="val">-</span></div>
+                <div class="stat-item"><span class="label">合計</span><span id="statTotal" class="val">0</span></div>
+                <div class="stat-item"><span class="label">ダメ</span><span id="statBad" class="val">0</span></div>
+                <div class="stat-item"><span class="label">OK</span><span id="statGood" class="val">0</span></div>
+                <div class="stat-item"><span class="label">完璧</span><span id="statPerfect" class="val">0</span></div>
             </div>
         </div>
-        <div id="statsArea" class="stats-grid">
-            <div class="stat-item full"><span class="label">ステータス</span><span id="statStatus" class="val">-</span></div>
-            <div class="stat-item"><span class="label">合計</span><span id="statTotal" class="val">0</span></div>
-            <div class="stat-item"><span class="label">ダメ</span><span id="statBad" class="val">0</span></div>
-            <div class="stat-item"><span class="label">OK</span><span id="statGood" class="val">0</span></div>
-            <div class="stat-item"><span class="label">完璧</span><span id="statPerfect" class="val">0</span></div>
+
+        <div id="view-list" class="view">
+            <button class="back-link" onclick="changeView('view-submenu')">← 戻る</button>
+            <h2>単語一覧</h2>
+            <div id="list-container"></div>
         </div>
-    </div>
 
-    <div id="view-list" class="view" style="display:none">
-        <button class="back-link" onclick="changeView('view-submenu')">← 戻る</button>
-        <h2>単語一覧</h2>
-        <div id="list-container"></div>
+        <div id="saveStatus"></div>
     </div>
+    
+    <button class="reset-link" onclick="resetAllStats()">学習履歴をすべてリセット</button>
 
-    <div id="saveStatus"></div>
-</div>
+    <script src="script.js"></script>
+</body>
+</html>
