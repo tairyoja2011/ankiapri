@@ -1,12 +1,12 @@
 // --- 設定エリア ---
-//スプレッドシートのWeb公開(CSV)URL
 const READ_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQiBU73LGsFHvtGPvST1fPIxvetpofBMFpKeQTLHBZN0wtMPOQKJnTbzjTcCNTew5fiVwXoVL1dlPQB/pub?gid=0&single=true&output=csv";
-//"先ほどコピーしたGASのウェブアプリURL";
 const WRITE_URL = "https://script.google.com/macros/s/AKfycbzxEnfw0-oIgZ_cPZriklw73B49bhDq8zXXRUT5qEu6mQwHbyeS3Q-EYjmNeULDdYCl/exec";
 
-let queue = [];
+let allCards = [];   // 全単語のマスタデータ（一覧用）
+let queue = [];      // 出題待ちのデータ（回答モード用）
 let currentCard = null;
 
+// HTML要素の取得
 const questionEl = document.getElementById("question");
 const answerEl = document.getElementById("answer");
 const statsArea = document.getElementById("statsArea");
@@ -14,31 +14,65 @@ const showAnswerBtn = document.getElementById("showAnswerBtn");
 const evalContainer = document.getElementById("evalContainer");
 const saveStatusEl = document.getElementById("saveStatus");
 
+// --- 画面切り替えロジック ---
+function changeView(viewId) {
+    document.querySelectorAll('.view').forEach(v => v.style.display = 'none');
+    document.getElementById(viewId).style.display = 'block';
+}
+
+function showSubMenu(bookName) {
+    document.getElementById('selected-book-title').textContent = bookName;
+    changeView('view-submenu');
+}
+
+// 回答モード開始
+async function startStudyMode() {
+    changeView('view-study');
+    if (allCards.length === 0) await loadData(); 
+    prepareQueue(); 
+    showNextCard();
+}
+
+// 一覧モード開始
+async function startListMode() {
+    changeView('view-list');
+    if (allCards.length === 0) await loadData();
+    renderList();
+}
+
+// --- データ処理 ---
 async function loadData() {
     try {
+        saveStatusEl.textContent = "データ読み込み中...";
         const response = await fetch(READ_URL);
         const csvText = await response.text();
         const rows = csvText.split(/\r?\n/).slice(1); 
-        const localPerfectList = JSON.parse(localStorage.getItem('perfectCards') || "[]");
-
-        const flashcards = rows.filter(row => row.trim() !== "").map(row => {
+        
+        allCards = rows.filter(row => row.trim() !== "").map(row => {
             const cols = row.split(',');
             return { 
                 q: cols[0]?.trim() || "", 
                 a: cols[1]?.trim() || "", 
                 status: cols[2]?.trim() || "未着手",
-                // 文字列ではなく数値(Number)として保持する
                 bad: Number(cols[3]) || 0,
                 good: Number(cols[4]) || 0,
                 perfect: Number(cols[5]) || 0,
                 total: Number(cols[6]) || 0
             };
-        }).filter(card => card.status !== "完璧" && !localPerfectList.includes(card.q));
+        });
+        saveStatusEl.textContent = "";
+    } catch (error) { 
+        alert("データ読み込みに失敗しました");
+    }
+}
 
-        queue = [...flashcards];
-        shuffleArray(queue);
-        showNextCard();
-    } catch (error) { questionEl.textContent = "読み込み失敗"; }
+// 出題用キューの作成（完璧を除外してシャッフル）
+function prepareQueue() {
+    const localPerfectList = JSON.parse(localStorage.getItem('perfectCards') || "[]");
+    queue = allCards.filter(card => 
+        card.status !== "完璧" && !localPerfectList.includes(card.q)
+    );
+    shuffleArray(queue);
 }
 
 function shuffleArray(array) {
@@ -48,7 +82,7 @@ function shuffleArray(array) {
     }
 }
 
-// 画面の統計表示を更新する専用の関数
+// --- 回答モード用関数 ---
 function updateStatsDisplay(card) {
     document.getElementById("statStatus").textContent = card.status;
     document.getElementById("statTotal").textContent = card.total;
@@ -67,13 +101,9 @@ function showNextCard() {
         return;
     }
     currentCard = queue.shift();
-    
     questionEl.textContent = currentCard.q;
     answerEl.textContent = currentCard.a;
-    
-    // 現在保持している数値を表示
     updateStatsDisplay(currentCard);
-
     answerEl.style.display = "none";
     statsArea.style.display = "grid";
     showAnswerBtn.style.display = "block";
@@ -86,8 +116,25 @@ function flipCard() {
     evalContainer.style.display = "flex";
 }
 
+function handleEval(rating) {
+    currentCard.status = rating;
+    currentCard.total += 1;
+    if (rating === 'ダメ') currentCard.bad += 1;
+    if (rating === 'オッケー') currentCard.good += 1;
+    if (rating === '完璧') currentCard.perfect += 1;
+
+    updateStatsDisplay(currentCard);
+    saveToSheet(currentCard.q, rating); 
+
+    if (rating === 'ダメ') {
+        queue.splice(1, 0, currentCard);
+    } else if (rating === 'オッケー') {
+        queue.push(currentCard);
+    }
+    showNextCard();
+}
+
 async function saveToSheet(word, rating) {
-    saveStatusEl.textContent = "保存中...";
     if (rating === '完璧') {
         const list = JSON.parse(localStorage.getItem('perfectCards') || "[]");
         list.push(word);
@@ -99,35 +146,25 @@ async function saveToSheet(word, rating) {
             mode: "no-cors",
             body: JSON.stringify({ word: word, status: rating })
         });
-        saveStatusEl.textContent = "保存完了";
-        setTimeout(() => saveStatusEl.textContent = "", 1500);
-    } catch (e) { saveStatusEl.textContent = "保存失敗"; }
+    } catch (e) { console.error("Save failed"); }
 }
 
-function handleEval(rating) {
-    // --- 画面上の数値を即座にカウントアップする ---
-    currentCard.status = rating;
-    currentCard.total += 1;
-    if (rating === 'ダメ') currentCard.bad += 1;
-    if (rating === 'オッケー') currentCard.good += 1;
-    if (rating === '完璧') currentCard.perfect += 1;
-
-    // 数値が増えた状態で画面を更新（一瞬見える可能性があるため）
-    updateStatsDisplay(currentCard);
-
-    // スプレッドシートへの送信（バックグラウンド）
-    saveToSheet(currentCard.q, rating); 
-
-    // 出題順の調整
-    if (rating === 'ダメ') {
-        queue.splice(1, 0, currentCard); // 次の次の位置へ
-    } else if (rating === 'オッケー') {
-        queue.push(currentCard); // 最後尾へ
-    }
-    
-    showNextCard();
+// --- 一覧モード用関数 ---
+function renderList() {
+    const container = document.getElementById('list-container');
+    container.innerHTML = allCards.map(card => `
+        <div class="list-item" style="background:white; margin:10px 0; padding:15px; border-radius:15px; text-align:left; box-shadow:0 4px 12px rgba(0,0,0,0.05);">
+            <div style="font-weight:bold; color:#333; font-size:16px;">${card.q}</div>
+            <div style="color:#ff4757; font-size:15px; margin-top:5px;">${card.a}</div>
+            <div style="display:flex; justify-content:space-between; margin-top:10px; font-size:11px; color:#888; border-top:1px solid #eee; pt:5px;">
+                <span>${card.status}</span>
+                <span>計 ${card.total}回 (ダメ:${card.bad} 完:${card.perfect})</span>
+            </div>
+        </div>
+    `).join('');
 }
 
+// --- リセット処理 ---
 async function resetAllStats() {
     if (!confirm("すべての学習履歴をリセットしますか？")) return;
     saveStatusEl.textContent = "リセット中...";
@@ -138,9 +175,9 @@ async function resetAllStats() {
             mode: "no-cors",
             body: JSON.stringify({ action: "reset_all" })
         });
-        saveStatusEl.textContent = "リセット完了！再起動します...";
-        setTimeout(() => location.reload(), 2000);
-    } catch (e) { saveStatusEl.textContent = "リセット失敗"; }
+        location.reload();
+    } catch (e) { alert("リセットに失敗しました"); }
 }
 
-loadData();
+// 初期起動時はトップ画面を表示
+// ※ loadData() は各モード開始時に呼ばれるように変更しました
