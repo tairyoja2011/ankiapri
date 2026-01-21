@@ -1,40 +1,37 @@
 const READ_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQiBU73LGsFHvtGPvST1fPIxvetpofBMFpKeQTLHBZN0wtMPOQKJnTbzjTcCNTew5fiVwXoVL1dlPQB/pub?gid=0&single=true&output=csv";
 const WRITE_URL = "https://script.google.com/macros/s/AKfycbzxEnfw0-oIgZ_cPZriklw73B49bhDq8zXXRUT5qEu6mQwHbyeS3Q-EYjmNeULDdYCl/exec";
 
+const READ_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQiBU73LGsFHvtGPvST1fPIxvetpofBMFpKeQTLHBZN0wtMPOQKJnTbzjTcCNTew5fiVwXoVL1dlPQB/pub?gid=0&single=true&output=csv";
+const WRITE_URL = "YOUR_GAS_WEBAPP_URL"; // GASのURLを入れてください
+
 let allCards = [];
 let queue = [];
 let currentCard = null;
 let isInputMode = false;
+let pendingUpdates = []; // 統計更新を一時保持
 
-// 画面遷移
 function changeView(id) {
     document.querySelectorAll('.view').forEach(v => v.style.display = 'none');
     document.getElementById(id).style.display = 'block';
     window.scrollTo(0,0);
 }
 
-// サブメニュー表示
 function showSubMenu(title) {
     isInputMode = false;
     document.getElementById('selected-book-title').textContent = title;
     changeView('view-submenu');
 }
 
-// データ読み込み
 async function loadData() {
     const res = await fetch(READ_URL);
     const csv = await res.text();
     const rows = csv.split(/\r?\n/).slice(1);
     allCards = rows.filter(r => r.trim()).map(r => {
         const c = r.split(',');
-        return { 
-            q: c[0]?.trim(), a: c[1]?.trim(), status: c[2]?.trim() || "未着手", 
-            bad: Number(c[3])||0, good: Number(c[4])||0, perfect: Number(c[5])||0, total: Number(c[6])||0 
-        };
+        return { q: c[0]?.trim(), a: c[1]?.trim(), status: c[2]?.trim() || "未着手", bad: Number(c[3])||0, good: Number(c[4])||0, perfect: Number(c[5])||0, total: Number(c[6])||0 };
     });
 }
 
-// 共通リセット処理（中止時や次へ進む際に編集モードを解除）
 function resetDisplayState() {
     document.getElementById("edit-mode-area").style.display = "none";
     document.getElementById("answer-display").style.display = "block";
@@ -43,16 +40,14 @@ function resetDisplayState() {
     document.getElementById("edit-toggle-btn").style.display = "block";
 }
 
-// 各モード開始
 async function startStudyMode(type) {
     isInputMode = false;
     resetDisplayState();
     await loadData();
-    if (type === 'bad') queue = allCards.filter(c => c.bad > 0 || c.status === "未着手" || c.status === "");
+    if (type === 'bad') queue = allCards.filter(c => c.bad > 0 || c.status === "未着手");
     else if (type === 'good-perfect') queue = allCards.filter(c => c.good > 0 || c.perfect > 0);
     else queue = allCards.filter(c => c.status !== "完璧");
     queue.sort(() => Math.random() - 0.5);
-    if (queue.length === 0) return alert("対象がありません");
     changeView('view-study'); showNext();
 }
 
@@ -61,16 +56,14 @@ async function startInputMode() {
     resetDisplayState();
     await loadData();
     queue = [...allCards].sort(() => Math.random() - 0.5);
-    if (queue.length === 0) return alert("対象がありません");
     changeView('view-study'); showNext();
 }
 
 function showNext() {
     if (queue.length === 0) {
-        document.getElementById("question").textContent = "全問終了！";
+        document.getElementById("question").textContent = "終了！更新ボタンを押して保存してください";
         document.getElementById("evalContainer").style.display = "none";
         document.getElementById("showAnswerBtn").style.display = "none";
-        document.getElementById("answer-container").style.display = "none";
         return;
     }
     resetDisplayState();
@@ -78,12 +71,6 @@ function showNext() {
     document.getElementById("question").textContent = currentCard.q;
     document.getElementById("answer-display").innerText = currentCard.a;
     document.getElementById("answer-edit").value = currentCard.a;
-    
-    document.getElementById("statTotal").textContent = currentCard.total;
-    document.getElementById("statBad").textContent = currentCard.bad;
-    document.getElementById("statGood").textContent = currentCard.good;
-    document.getElementById("statPerfect").textContent = currentCard.perfect;
-
     document.getElementById("user-input-area").style.display = isInputMode ? "block" : "none";
     document.getElementById("user-answer-input").value = "";
     document.getElementById("showAnswerBtn").style.display = "block";
@@ -95,16 +82,69 @@ function flipCard() {
         const inputVal = document.getElementById("user-answer-input").value.trim();
         document.getElementById("current-user-ans").innerText = inputVal || "(未入力)";
         const key = "last_ans_" + currentCard.q;
-        document.getElementById("last-user-ans").innerText = localStorage.getItem(key) || "(記録なし)";
+        document.getElementById("last-user-ans").innerText = localStorage.getItem(key) || "(なし)";
         if (inputVal !== "") localStorage.setItem(key, inputVal);
         document.getElementById("comparison-area").style.display = "block";
         document.getElementById("edit-toggle-btn").style.display = "none";
-    } else {
-        document.getElementById("edit-toggle-btn").style.display = "block";
     }
     document.getElementById("answer-container").style.display = "block";
     document.getElementById("showAnswerBtn").style.display = "none";
     document.getElementById("evalContainer").style.display = "flex";
+}
+
+function handleEval(rating) {
+    // ローカル保持
+    pendingUpdates.push({
+        word: currentCard.q,
+        status: rating,
+        user_ans: isInputMode ? document.getElementById("user-answer-input").value.trim() : ""
+    });
+    updateSyncBadge();
+    if (rating === 'ダメ') queue.splice(1, 0, currentCard);
+    showNext();
+}
+
+function updateSyncBadge() {
+    const badge = document.getElementById("pending-count");
+    if (pendingUpdates.length > 0) {
+        badge.textContent = pendingUpdates.length;
+        badge.style.display = "inline";
+    } else {
+        badge.style.display = "none";
+    }
+}
+
+async function syncData() {
+    if (pendingUpdates.length === 0) return alert("更新データなし");
+    const btn = document.getElementById("sync-btn-study");
+    btn.textContent = "更新中...";
+    await fetch(WRITE_URL, { method: "POST", mode: "no-cors", body: JSON.stringify({ action: "bulk_update", updates: pendingUpdates }) });
+    pendingUpdates = [];
+    updateSyncBadge();
+    btn.textContent = "更新";
+    alert("同期完了！");
+}
+
+function stopStudy() {
+    if (pendingUpdates.length > 0 && !confirm("未送信のデータがありますが中止しますか？")) return;
+    changeView('view-submenu');
+}
+
+async function updateCurrentCardContent() {
+    const newA = document.getElementById("answer-edit").value;
+    if(!confirm("即座にスプレッドシートを更新しますか？")) return;
+    await fetch(WRITE_URL, { method: "POST", mode: "no-cors", body: JSON.stringify({ action: "update_content", word: currentCard.q, new_answer: newA }) });
+    currentCard.a = newA;
+    document.getElementById("answer-display").innerText = newA;
+    resetDisplayState();
+}
+
+async function addNewCard() {
+    const q = document.getElementById("new-q").value;
+    const a = document.getElementById("new-a").value;
+    await fetch(WRITE_URL, { method: "POST", mode: "no-cors", body: JSON.stringify({ action: "add_new", word: q, answer: a }) });
+    alert("追加完了");
+    changeView('view-submenu');
 }
 
 function toggleEditMode() {
@@ -113,51 +153,18 @@ function toggleEditMode() {
     document.getElementById("edit-toggle-btn").style.display = "none";
 }
 
-async function updateCurrentCardContent() {
-    const newA = document.getElementById("answer-edit").value;
-    if(!confirm("内容を更新しますか？")) return;
-    fetch(WRITE_URL, { method: "POST", mode: "no-cors", body: JSON.stringify({ action: "update_content", word: currentCard.q, new_answer: newA }) });
-    currentCard.a = newA;
-    document.getElementById("answer-display").innerText = newA;
-    document.getElementById("edit-mode-area").style.display = "none";
-    document.getElementById("answer-display").style.display = "block";
-    document.getElementById("edit-toggle-btn").style.display = "block";
-}
-
-async function addNewCard() {
-    const q = document.getElementById("new-q").value.trim();
-    const a = document.getElementById("new-a").value.trim();
-    if(!q || !a) return alert("入力してください");
-    await fetch(WRITE_URL, { method: "POST", mode: "no-cors", body: JSON.stringify({ action: "add_new", word: q, answer: a }) });
-    alert("追加しました！");
-    document.getElementById("new-q").value = "";
-    document.getElementById("new-a").value = "";
-    changeView('view-submenu');
-}
-
-async function handleEval(rating) {
-    fetch(WRITE_URL, { method: "POST", mode: "no-cors", body: JSON.stringify({ word: currentCard.q, status: rating }) });
-    if (rating === 'ダメ') queue.splice(1, 0, currentCard);
-    showNext();
-}
-
 async function startListMode() {
     await loadData();
     changeView('view-list');
     const container = document.getElementById('list-container');
-    const total = allCards.length;
-    document.getElementById('list-title').textContent = `一覧 (${total}問)`;
-    
-    container.innerHTML = allCards.map((c, i) => `
+    container.innerHTML = allCards.map(c => `
         <div class="list-item">
-            <div style="font-size:10px; color:#aaa; margin-bottom:5px;">No. ${i+1}</div>
             <div class="list-q">${c.q}</div>
             <div class="list-a">${c.a}</div>
-            <div class="list-stats-row">
+            <div style="margin-top:10px;">
                 <span class="stat-badge badge-bad">✖ ${c.bad}</span>
                 <span class="stat-badge badge-good">OK ${c.good}</span>
                 <span class="stat-badge badge-perfect">★ ${c.perfect}</span>
-                <span class="stat-badge badge-total" style="margin-left:auto;">計 ${c.total}回</span>
             </div>
         </div>
     `).join('');
@@ -169,4 +176,5 @@ async function resetAllStats() {
     alert("リセット完了しました");
     location.reload();
 }
+
 
