@@ -2,11 +2,11 @@
 const READ_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQiBU73LGsFHvtGPvST1fPIxvetpofBMFpKeQTLHBZN0wtMPOQKJnTbzjTcCNTew5fiVwXoVL1dlPQB/pub?gid=0&single=true&output=csv";
 const WRITE_URL = "https://script.google.com/macros/s/AKfycbzxEnfw0-oIgZ_cPZriklw73B49bhDq8zXXRUT5qEu6mQwHbyeS3Q-EYjmNeULDdYCl/exec";
 
-let allCards = [];   // 全単語のマスタデータ（一覧用）
-let queue = [];      // 出題待ちのデータ（回答モード用）
+let allCards = []; // 全単語データ保持用
+let queue = [];
 let currentCard = null;
 
-// HTML要素の取得
+// HTML要素
 const questionEl = document.getElementById("question");
 const answerEl = document.getElementById("answer");
 const statsArea = document.getElementById("statsArea");
@@ -14,7 +14,7 @@ const showAnswerBtn = document.getElementById("showAnswerBtn");
 const evalContainer = document.getElementById("evalContainer");
 const saveStatusEl = document.getElementById("saveStatus");
 
-// --- 画面切り替えロジック ---
+// --- 1. 画面切り替え管理 ---
 function changeView(viewId) {
     document.querySelectorAll('.view').forEach(v => v.style.display = 'none');
     document.getElementById(viewId).style.display = 'block';
@@ -25,25 +25,25 @@ function showSubMenu(bookName) {
     changeView('view-submenu');
 }
 
-// 回答モード開始
+// 回答モード開始ボタン
 async function startStudyMode() {
     changeView('view-study');
-    if (allCards.length === 0) await loadData(); 
-    prepareQueue(); 
+    if (allCards.length === 0) await loadData(); // データがなければ読み込む
+    prepareQueue(); // 出題用リスト作成
     showNextCard();
 }
 
-// 一覧モード開始
+// 一覧モード開始ボタン
 async function startListMode() {
     changeView('view-list');
     if (allCards.length === 0) await loadData();
     renderList();
 }
 
-// --- データ処理 ---
+// --- 2. データ読み込み（共通） ---
 async function loadData() {
     try {
-        saveStatusEl.textContent = "データ読み込み中...";
+        saveStatusEl.textContent = "データ取得中...";
         const response = await fetch(READ_URL);
         const csvText = await response.text();
         const rows = csvText.split(/\r?\n/).slice(1); 
@@ -61,12 +61,12 @@ async function loadData() {
             };
         });
         saveStatusEl.textContent = "";
-    } catch (error) { 
-        alert("データ読み込みに失敗しました");
+    } catch (error) {
+        saveStatusEl.textContent = "読み込み失敗";
     }
 }
 
-// 出題用キューの作成（完璧を除外してシャッフル）
+// 出題用キューの準備（完璧除外）
 function prepareQueue() {
     const localPerfectList = JSON.parse(localStorage.getItem('perfectCards') || "[]");
     queue = allCards.filter(card => 
@@ -75,6 +75,7 @@ function prepareQueue() {
     shuffleArray(queue);
 }
 
+// --- 3. 回答モードのロジック（今まで通り） ---
 function shuffleArray(array) {
     for (let i = array.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
@@ -82,7 +83,6 @@ function shuffleArray(array) {
     }
 }
 
-// --- 回答モード用関数 ---
 function updateStatsDisplay(card) {
     document.getElementById("statStatus").textContent = card.status;
     document.getElementById("statTotal").textContent = card.total;
@@ -146,38 +146,23 @@ async function saveToSheet(word, rating) {
             mode: "no-cors",
             body: JSON.stringify({ word: word, status: rating })
         });
-    } catch (e) { console.error("Save failed"); }
+    } catch (e) { console.error(e); }
 }
 
-// --- 一覧モード用関数 ---
+// --- 4. 一覧モードのロジック（新規作成） ---
 function renderList() {
     const container = document.getElementById('list-container');
     container.innerHTML = allCards.map(card => `
-        <div class="list-item" style="background:white; margin:10px 0; padding:15px; border-radius:15px; text-align:left; box-shadow:0 4px 12px rgba(0,0,0,0.05);">
+        <div style="background:white; margin:10px 0; padding:15px; border-radius:15px; text-align:left; box-shadow:0 4px 12px rgba(0,0,0,0.05);">
             <div style="font-weight:bold; color:#333; font-size:16px;">${card.q}</div>
             <div style="color:#ff4757; font-size:15px; margin-top:5px;">${card.a}</div>
-            <div style="display:flex; justify-content:space-between; margin-top:10px; font-size:11px; color:#888; border-top:1px solid #eee; pt:5px;">
-                <span>${card.status}</span>
-                <span>計 ${card.total}回 (ダメ:${card.bad} 完:${card.perfect})</span>
+            <div style="display:flex; justify-content:space-between; margin-top:10px; font-size:11px; color:#888; border-top:1px solid #eee; padding-top:5px;">
+                <span>状態: ${card.status}</span>
+                <span>計: ${card.total}回 (ダメ:${card.bad})</span>
             </div>
         </div>
     `).join('');
 }
 
-// --- リセット処理 ---
-async function resetAllStats() {
-    if (!confirm("すべての学習履歴をリセットしますか？")) return;
-    saveStatusEl.textContent = "リセット中...";
-    localStorage.removeItem('perfectCards');
-    try {
-        await fetch(WRITE_URL, {
-            method: "POST",
-            mode: "no-cors",
-            body: JSON.stringify({ action: "reset_all" })
-        });
-        location.reload();
-    } catch (e) { alert("リセットに失敗しました"); }
-}
-
-// 初期起動時はトップ画面を表示
-// ※ loadData() は各モード開始時に呼ばれるように変更しました
+// 起動時はトップを表示（読み込みは各モード開始時まで待機）
+changeView('view-top');
