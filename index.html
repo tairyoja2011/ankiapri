@@ -3,74 +3,32 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>My暗記アプリ v5.2</title>
+    <title>My暗記アプリ v6.0</title>
     <style>
-        /* 基本レイアウト */
         body { font-family: -apple-system, sans-serif; background: #f0f2f5; margin: 0; padding: 0; }
         .container { width: 95%; max-width: 500px; margin: 0 auto; padding: 60px 0 100px; text-align: center; position: relative; }
         .view { display: none; width: 100%; }
         
-        /* 左上のボタン（中止・戻る） */
-        .top-left-back {
-            position: absolute; top: 15px; left: 15px;
-            background: #eee; color: #333; padding: 8px 15px;
-            border-radius: 20px; font-size: 13px; border: none; font-weight: bold; cursor: pointer;
-            z-index: 10;
-        }
+        /* ボタン基本 */
+        .top-left-back { position: absolute; top: 15px; left: 15px; background: #eee; color: #333; padding: 8px 15px; border-radius: 20px; font-size: 13px; border: none; font-weight: bold; cursor: pointer; z-index: 10; }
+        .top-right-sync { position: absolute; top: 15px; right: 15px; background: #2f3542; color: white; padding: 8px 15px; border-radius: 20px; font-size: 13px; border: none; font-weight: bold; cursor: pointer; z-index: 10; }
+        .sync-badge { background: #ff4757; color: white; border-radius: 50%; padding: 2px 6px; font-size: 10px; margin-left: 5px; display: none; }
 
-        /* メニューボタン */
+        /* カード・入力 */
         .menu-card { background: white; padding: 35px 20px; border-radius: 25px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); border: 2px solid #007aff; color: #007aff; font-size: 20px; font-weight: bold; width: 100%; margin-bottom: 20px; cursor: pointer; }
-        .show-btn { background: #007aff; color: white; width: 100%; padding: 18px; border-radius: 15px; font-size: 18px; font-weight: bold; margin-bottom: 15px; border: none; cursor: pointer; }
-
-        /* 学習カード */
+        .show-btn { background: #007aff; color: white; width: 100%; padding: 18px; border-radius: 15px; font-size: 18px; font-weight: bold; margin-bottom: 15px; border: none; cursor: pointer; width: 100%; }
         #card { background: white; min-height: 250px; padding: 25px; border-radius: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); display: flex; align-items: center; justify-content: center; margin-bottom: 20px; }
-        #question { font-size: 24px; font-weight: bold; color: #333; line-height: 1.4; }
-        #answer-display { font-size: 26px; font-weight: bold; color: #ff4757; margin: 20px 0; white-space: pre-wrap; word-break: break-all; }
-
-        /* 入力・編集 */
         textarea { width: 100%; padding: 12px; border-radius: 12px; border: 2px solid #ddd; font-size: 16px; box-sizing: border-box; font-family: inherit; }
-        #user-answer-input { border-color: #ff9500; min-height: 120px; margin-top: 10px; }
-
-        /* 判定ボタン（以前のデザインを維持） */
+        
+        /* 判定ボタン */
         .eval-container { display: none; gap: 10px; width: 100%; margin-bottom: 15px; }
         .eval-btn { flex: 1; color: white; padding: 18px 0; border-radius: 15px; font-size: 16px; font-weight: bold; border: none; cursor: pointer; }
         .bad { background: #ff4757; } .good { background: #ffa502; } .perfect { background: #2ed573; }
 
-        /* 比較エリア */
-        #comparison-area { margin-top: 15px; text-align: left; font-size: 14px; background: #fff4e5; padding: 15px; border-radius: 15px; border: 1px solid #ff9500; white-space: pre-wrap; }
-
-        /* 一覧表示のレイアウト */
-        .list-item { background: white; margin-bottom: 15px; padding: 20px; border-radius: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border-left: 6px solid #007aff; text-align: left; word-break: break-all; }
-        .list-q { font-weight: bold; font-size: 17px; color: #333; margin-bottom: 8px; }
-        .list-a { color: #ff4757; font-size: 15px; font-weight: bold; white-space: pre-wrap; margin-bottom: 10px; }
-        /* 一覧の統計バッジ用スタイル */
-        .list-stats-row { 
-            display: flex; 
-            gap: 8px; 
-            margin-top: 12px; 
-            padding-top: 10px; 
-            border-top: 1px solid #eee;
-        }
-        .stat-badge {
-            padding: 3px 10px;
-            border-radius: 12px;
-            font-size: 11px;
-            font-weight: bold;
-            color: white;
-        }
-        .badge-bad { background: #ff4757; }     /* 赤 */
-        .badge-good { background: #ffa502; }    /* オレンジ */
-        .badge-perfect { background: #2ed573; } /* 緑 */
-        .badge-total { background: #f0f2f5; color: #666; } /* 薄いグレー */
-                
-        /* 統計グリッド */
-        .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-top: 20px; }
-        .stat-item { background: white; padding: 10px 2px; border-radius: 12px; font-size: 12px; box-shadow: 0 2px 5px rgba(0,0,0,0.03); }
-        .label { font-size: 9px; color: #aaa; }
-
-        /* 入力グループ（新規追加用） */
-        .input-group { text-align: left; margin-bottom: 15px; }
-        .input-group label { display: block; font-size: 12px; color: #666; margin-bottom: 5px; font-weight: bold; }
+        /* 一覧バッジ */
+        .list-item { background: white; margin-bottom: 15px; padding: 20px; border-radius: 20px; text-align: left; border-left: 6px solid #007aff; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        .stat-badge { padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: bold; color: white; margin-right: 5px; }
+        .badge-bad { background: #ff4757; } .badge-good { background: #ffa502; } .badge-perfect { background: #2ed573; }
     </style>
 </head>
 <body>
@@ -83,18 +41,18 @@
         <div id="view-submenu" class="view">
             <button class="top-left-back" onclick="changeView('view-top')">← 戻る</button>
             <h2 id="selected-book-title">メニュー</h2>
-            <div class="button-area">
-                <button class="show-btn" onclick="startStudyMode('all')">全問題</button>
-                <button class="show-btn" style="background:#ff4757" onclick="startStudyMode('bad')">ダメ・未回答</button>
-                <button class="show-btn" style="background:#2ed573" onclick="startStudyMode('good-perfect')">OK・完璧</button>
-                <button class="show-btn" style="background:#ff9500; margin-top:10px;" onclick="startInputMode()">入力トレーニング</button>
-                <button class="show-btn" style="background:#666; margin-top:10px;" onclick="startListMode()">一覧を確認</button>
-                <button class="show-btn" style="background:#2ed573; margin-top:10px;" onclick="changeView('view-add')">＋ 新規問題を追加</button>
-            </div>
+            <button class="show-btn" onclick="startStudyMode('all')">全問題</button>
+            <button class="show-btn" style="background:#ff4757" onclick="startStudyMode('bad')">ダメ・未回答</button>
+            <button class="show-btn" style="background:#2ed573" onclick="startStudyMode('good-perfect')">OK・完璧</button>
+            <button class="show-btn" style="background:#ff9500" onclick="startInputMode()">入力トレーニング</button>
+            <button class="show-btn" style="background:#666" onclick="startListMode()">一覧を確認</button>
+            <button class="show-btn" style="background:#2ed573" onclick="changeView('view-add')">＋ 新規問題を追加</button>
         </div>
 
         <div id="view-study" class="view">
-            <button class="top-left-back" onclick="changeView('view-submenu')">✕ 中止</button>
+            <button class="top-left-back" onclick="stopStudy()">✕ 中止</button>
+            <button id="sync-btn-study" class="top-right-sync" onclick="syncData()">更新<span id="pending-count" class="sync-badge">0</span></button>
+            
             <div id="card">
                 <div style="width: 100%;">
                     <div id="question">...</div>
@@ -102,62 +60,43 @@
                         <textarea id="user-answer-input" placeholder="答えを入力"></textarea>
                     </div>
                     <div id="answer-container" style="display:none; margin-top:15px;">
-                        <div style="font-size:11px; color:#aaa;">正解：</div>
-                        <div id="answer-display"></div>
-                        <div id="comparison-area" style="display:none;">
-                            <div style="color:#e67e22;">● 今回: <span id="current-user-ans"></span></div>
-                            <div style="color:#7f8c8d; margin-top:5px;">● 前回: <span id="last-user-ans"></span></div>
+                        <div id="answer-display" style="font-size:26px; font-weight:bold; color:#ff4757; white-space:pre-wrap;"></div>
+                        <div id="comparison-area" style="display:none; text-align:left; background:#fff4e5; padding:10px; border-radius:10px; margin-top:10px;">
+                            <div style="font-size:12px; color:#e67e22;">今回: <span id="current-user-ans"></span></div>
+                            <div style="font-size:12px; color:#7f8c8d;">前回: <span id="last-user-ans"></span></div>
                         </div>
-                        <button id="edit-toggle-btn" style="background:none; border:none; color:#aaa; text-decoration:underline; font-size:12px; margin-top:10px;" onclick="toggleEditMode()">内容を修正する</button>
-                        <div id="edit-mode-area" style="display:none; margin-top:10px;">
-                            <textarea id="answer-edit" style="min-height:100px;"></textarea>
-                            <button class="show-btn" style="font-size:14px; padding:10px; margin-top:10px;" onclick="updateCurrentCardContent()">修正を保存</button>
+                        <button id="edit-toggle-btn" style="margin-top:10px; background:none; border:none; color:#aaa; text-decoration:underline;" onclick="toggleEditMode()">内容を修正する</button>
+                        <div id="edit-mode-area" style="display:none;">
+                            <textarea id="answer-edit"></textarea>
+                            <button class="show-btn" style="font-size:14px; margin-top:10px;" onclick="updateCurrentCardContent()">修正を保存 (即時同期)</button>
                         </div>
                     </div>
                 </div>
             </div>
-            <div class="button-area">
-                <button id="showAnswerBtn" class="show-btn" onclick="flipCard()">答え合わせ</button>
-                <div id="evalContainer" class="eval-container">
-                    <button class="eval-btn bad" onclick="handleEval('ダメ')">ダメ</button>
-                    <button class="eval-btn good" onclick="handleEval('オッケー')">OK</button>
-                    <button class="eval-btn perfect" onclick="handleEval('完璧')">完璧</button>
-                </div>
-            </div>
-            <div class="stats-grid">
-                <div class="stat-item"><span class="label">合計</span><br><span id="statTotal">0</span></div>
-                <div class="stat-item"><span class="label">ダメ</span><br><span id="statBad">0</span></div>
-                <div class="stat-item"><span class="label">OK</span><br><span id="statGood">0</span></div>
-                <div class="stat-item"><span class="label">完璧</span><br><span id="statPerfect">0</span></div>
+            
+            <button id="showAnswerBtn" class="show-btn" onclick="flipCard()">答え合わせ</button>
+            <div id="evalContainer" class="eval-container">
+                <button class="eval-btn bad" onclick="handleEval('ダメ')">ダメ</button>
+                <button class="eval-btn good" onclick="handleEval('オッケー')">OK</button>
+                <button class="eval-btn perfect" onclick="handleEval('完璧')">完璧</button>
             </div>
         </div>
 
         <div id="view-add" class="view">
             <button class="top-left-back" onclick="changeView('view-submenu')">← 戻る</button>
-            <h2 style="margin-top:20px;">新規問題の追加</h2>
-            <div class="input-group">
-                <label>問題（表）</label>
-                <textarea id="new-q" style="min-height:80px;" placeholder="例：WWWは何の略？"></textarea>
-            </div>
-            <div class="input-group">
-                <label>答え（裏）</label>
-                <textarea id="new-a" style="min-height:120px;" placeholder="例：World Wide Web"></textarea>
-            </div>
-            <button class="show-btn" style="background:#2ed573" onclick="addNewCard()">スプレッドシートに追加</button>
+            <h2>新規追加</h2>
+            <textarea id="new-q" placeholder="問題"></textarea><br><br>
+            <textarea id="new-a" placeholder="答え"></textarea><br><br>
+            <button class="show-btn" style="background:#2ed573" onclick="addNewCard()">即時追加</button>
         </div>
 
         <div id="view-list" class="view">
             <button class="top-left-back" onclick="changeView('view-submenu')">← 戻る</button>
-            <h2 id="list-title" style="margin-top:20px;">一覧</h2>
+            <h2 id="list-title">一覧</h2>
             <div id="list-container"></div>
-            
-            <div style="margin-top: 40px; padding: 20px; border-top: 1px solid #ddd; background: #fff;">
-                <p style="font-size: 11px; color: #999;">学習データを初期状態に戻します</p>
-                <button class="show-btn" style="background:#ff4757; font-size:14px; padding:10px; width:auto; min-width:200px;" onclick="resetAllStats()">全問題の統計をリセット</button>
-            </div>
+            <button class="show-btn" style="background:#ff4757; margin-top:20px;" onclick="resetAllStats()">全統計をリセット</button>
         </div>
     </div>
     <script src="script.js"></script>
 </body>
 </html>
-
