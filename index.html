@@ -43,8 +43,26 @@
         .list-item { background: white; margin-bottom: 15px; padding: 20px; border-radius: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border-left: 6px solid #007aff; text-align: left; word-break: break-all; }
         .list-q { font-weight: bold; font-size: 17px; color: #333; margin-bottom: 8px; }
         .list-a { color: #ff4757; font-size: 15px; font-weight: bold; white-space: pre-wrap; margin-bottom: 10px; }
-        .list-stats-row { display: flex; gap: 10px; font-size: 11px; color: #666; border-top: 1px solid #eee; padding-top: 10px; margin-top: 5px; }
-
+        /* 一覧の統計バッジ用スタイル */
+        .list-stats-row { 
+            display: flex; 
+            gap: 8px; 
+            margin-top: 12px; 
+            padding-top: 10px; 
+            border-top: 1px solid #eee;
+        }
+        .stat-badge {
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: bold;
+            color: white;
+        }
+        .badge-bad { background: #ff4757; }     /* 赤 */
+        .badge-good { background: #ffa502; }    /* オレンジ */
+        .badge-perfect { background: #2ed573; } /* 緑 */
+        .badge-total { background: #f0f2f5; color: #666; } /* 薄いグレー */
+                
         /* 統計グリッド */
         .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-top: 20px; }
         .stat-item { background: white; padding: 10px 2px; border-radius: 12px; font-size: 12px; box-shadow: 0 2px 5px rgba(0,0,0,0.03); }
@@ -142,3 +160,4 @@
     <script src="script.js"></script>
 </body>
 </html>
+
