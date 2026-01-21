@@ -3,47 +3,56 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>My暗記アプリ v5.1</title>
+    <title>My暗記アプリ v5.2</title>
     <style>
+        /* 基本レイアウト */
         body { font-family: -apple-system, sans-serif; background: #f0f2f5; margin: 0; padding: 0; }
-        .container { width: 95%; max-width: 500px; margin: 0 auto; padding: 60px 0 100px; text-align: center; }
+        .container { width: 95%; max-width: 500px; margin: 0 auto; padding: 60px 0 100px; text-align: center; position: relative; }
         .view { display: none; width: 100%; }
         
-        /* 左上のボタン配置 */
+        /* 左上のボタン（中止・戻る） */
         .top-left-back {
             position: absolute; top: 15px; left: 15px;
             background: #eee; color: #333; padding: 8px 15px;
-            border-radius: 20px; font-size: 13px; text-decoration: none; border: none; font-weight: bold; cursor: pointer;
+            border-radius: 20px; font-size: 13px; border: none; font-weight: bold; cursor: pointer;
+            z-index: 10;
         }
 
-        /* メニュー・カード */
+        /* メニューボタン */
         .menu-card { background: white; padding: 35px 20px; border-radius: 25px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); border: 2px solid #007aff; color: #007aff; font-size: 20px; font-weight: bold; width: 100%; margin-bottom: 20px; cursor: pointer; }
         .show-btn { background: #007aff; color: white; width: 100%; padding: 18px; border-radius: 15px; font-size: 18px; font-weight: bold; margin-bottom: 15px; border: none; cursor: pointer; }
 
-        /* カードエリア */
+        /* 学習カード */
         #card { background: white; min-height: 250px; padding: 25px; border-radius: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); display: flex; align-items: center; justify-content: center; margin-bottom: 20px; }
         #question { font-size: 24px; font-weight: bold; color: #333; line-height: 1.4; }
-        #answer-display { font-size: 26px; font-weight: bold; color: #ff4757; margin: 20px 0; white-space: pre-wrap; }
+        #answer-display { font-size: 26px; font-weight: bold; color: #ff4757; margin: 20px 0; white-space: pre-wrap; word-break: break-all; }
 
-        /* 入力・編集欄 */
+        /* 入力・編集 */
         textarea { width: 100%; padding: 12px; border-radius: 12px; border: 2px solid #ddd; font-size: 16px; box-sizing: border-box; font-family: inherit; }
         #user-answer-input { border-color: #ff9500; min-height: 120px; margin-top: 10px; }
 
-        /* 追加・修正モード共通 */
-        .input-group { text-align: left; margin-bottom: 15px; }
-        .input-group label { display: block; font-size: 12px; color: #666; margin-bottom: 5px; font-weight: bold; }
-
-        /* 判定ボタン */
+        /* 判定ボタン（以前のデザインを維持） */
         .eval-container { display: none; gap: 10px; width: 100%; margin-bottom: 15px; }
-        .eval-btn { flex: 1; color: white; padding: 18px 0; border-radius: 15px; font-size: 16px; font-weight: bold; border: none; }
+        .eval-btn { flex: 1; color: white; padding: 18px 0; border-radius: 15px; font-size: 16px; font-weight: bold; border: none; cursor: pointer; }
         .bad { background: #ff4757; } .good { background: #ffa502; } .perfect { background: #2ed573; }
 
         /* 比較エリア */
         #comparison-area { margin-top: 15px; text-align: left; font-size: 14px; background: #fff4e5; padding: 15px; border-radius: 15px; border: 1px solid #ff9500; white-space: pre-wrap; }
 
+        /* 一覧表示のレイアウト */
+        .list-item { background: white; margin-bottom: 15px; padding: 20px; border-radius: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border-left: 6px solid #007aff; text-align: left; word-break: break-all; }
+        .list-q { font-weight: bold; font-size: 17px; color: #333; margin-bottom: 8px; }
+        .list-a { color: #ff4757; font-size: 15px; font-weight: bold; white-space: pre-wrap; margin-bottom: 10px; }
+        .list-stats-row { display: flex; gap: 10px; font-size: 11px; color: #666; border-top: 1px solid #eee; padding-top: 10px; margin-top: 5px; }
+
+        /* 統計グリッド */
         .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-top: 20px; }
         .stat-item { background: white; padding: 10px 2px; border-radius: 12px; font-size: 12px; box-shadow: 0 2px 5px rgba(0,0,0,0.03); }
         .label { font-size: 9px; color: #aaa; }
+
+        /* 入力グループ（新規追加用） */
+        .input-group { text-align: left; margin-bottom: 15px; }
+        .input-group label { display: block; font-size: 12px; color: #666; margin-bottom: 5px; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -107,7 +116,7 @@
 
         <div id="view-add" class="view">
             <button class="top-left-back" onclick="changeView('view-submenu')">← 戻る</button>
-            <h2>新規問題の追加</h2>
+            <h2 style="margin-top:20px;">新規問題の追加</h2>
             <div class="input-group">
                 <label>問題（表）</label>
                 <textarea id="new-q" style="min-height:80px;" placeholder="例：WWWは何の略？"></textarea>
@@ -121,8 +130,13 @@
 
         <div id="view-list" class="view">
             <button class="top-left-back" onclick="changeView('view-submenu')">← 戻る</button>
-            <h2 id="list-title">一覧</h2>
+            <h2 id="list-title" style="margin-top:20px;">一覧</h2>
             <div id="list-container"></div>
+            
+            <div style="margin-top: 40px; padding: 20px; border-top: 1px solid #ddd; background: #fff;">
+                <p style="font-size: 11px; color: #999;">学習データを初期状態に戻します</p>
+                <button class="show-btn" style="background:#ff4757; font-size:14px; padding:10px; width:auto; min-width:200px;" onclick="resetAllStats()">全問題の統計をリセット</button>
+            </div>
         </div>
     </div>
     <script src="script.js"></script>
