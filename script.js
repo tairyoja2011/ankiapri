@@ -35,8 +35,18 @@ function prepareQueue(type) {
     queue.sort(() => Math.random() - 0.5);
 }
 
+// 開始時のリセット処理を共通化
+function resetDisplayState() {
+    document.getElementById("edit-mode-area").style.display = "none";
+    document.getElementById("answer-display").style.display = "block";
+    document.getElementById("answer-container").style.display = "none";
+    document.getElementById("comparison-area").style.display = "none";
+    document.getElementById("edit-toggle-btn").style.display = "block";
+}
+
 async function startStudyMode(type) {
     isInputMode = false;
+    resetDisplayState(); // 中止時の状態をリセット
     await loadData(); prepareQueue(type);
     if (queue.length === 0) return alert("対象がありません");
     changeView('view-study'); showNext();
@@ -44,6 +54,7 @@ async function startStudyMode(type) {
 
 async function startInputMode() {
     isInputMode = true;
+    resetDisplayState(); // 中止時の状態をリセット
     await loadData(); prepareQueue('all');
     if (queue.length === 0) return alert("対象がありません");
     changeView('view-study'); showNext();
@@ -57,6 +68,9 @@ function showNext() {
         document.getElementById("answer-container").style.display = "none";
         return;
     }
+    // 次の問題へ移る際も状態を戻す
+    resetDisplayState();
+    
     currentCard = queue.shift();
     document.getElementById("question").textContent = currentCard.q;
     document.getElementById("answer-display").innerText = currentCard.a;
@@ -69,9 +83,6 @@ function showNext() {
 
     document.getElementById("user-input-area").style.display = isInputMode ? "block" : "none";
     document.getElementById("user-answer-input").value = "";
-    document.getElementById("answer-container").style.display = "none";
-    document.getElementById("edit-mode-area").style.display = "none";
-    document.getElementById("comparison-area").style.display = "none";
     document.getElementById("showAnswerBtn").style.display = "block";
     document.getElementById("evalContainer").style.display = "none";
 }
@@ -84,7 +95,6 @@ function flipCard() {
         document.getElementById("last-user-ans").innerText = localStorage.getItem(key) || "(記録なし)";
         if (inputVal !== "") localStorage.setItem(key, inputVal);
         document.getElementById("comparison-area").style.display = "block";
-        // 入力モード時は修正ボタンを隠す
         document.getElementById("edit-toggle-btn").style.display = "none";
     } else {
         document.getElementById("edit-toggle-btn").style.display = "block";
@@ -122,7 +132,7 @@ async function addNewCard() {
     document.getElementById("new-q").value = "";
     document.getElementById("new-a").value = "";
     document.querySelector("#view-add .show-btn").innerText = "スプレッドシートに追加";
-    changeView('view-top');
+    changeView('view-submenu'); // 追加後はサブメニューへ戻る
 }
 
 async function handleEval(rating) {
@@ -134,5 +144,5 @@ async function handleEval(rating) {
 async function startListMode() {
     await loadData(); changeView('view-list');
     const container = document.getElementById('list-container');
-    container.innerHTML = allCards.map((c, i) => `<div class="list-item"><b>${i+1}. ${c.q}</b><br><span style="color:#ff4757; font-size:14px;">${c.a}</span></div>`).join('');
+    container.innerHTML = allCards.map((c, i) => `<div class="list-item"><b>${i+1}. ${c.q}</b><br><span style="color:#ff4757; font-size:14px; white-space:pre-wrap;">${c.a}</span></div>`).join('');
 }
