@@ -18,3 +18,118 @@ https://tairyoja2011.github.io/ankiapri/index.html
 			
 	2-2．ネスペ		
 
+-----------------------------------------------------
+backup
+index.html
+
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>My暗記アプリ Pro</title>
+    <link rel="manifest" href="manifest.json">
+    <style>
+        body { 
+            font-family: -apple-system, sans-serif; 
+            text-align: center; 
+            background: #f5f7fa; 
+            margin: 0; 
+            padding-top: 30px; 
+            padding-bottom: 100px; /* 下部に余裕を持たせる */
+            min-height: 100vh;
+            position: relative;
+            box-sizing: border-box;
+        }
+        .container { width: 90%; max-width: 400px; margin: 0 auto; }
+        
+        /* カードは問題と答え専用に */
+        #card { 
+            background: white; 
+            min-height: 220px; /* 統計を出さない分、少し高さを抑える */
+            margin-bottom: 20px; 
+            padding: 20px; 
+            border-radius: 25px; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08); 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+        }
+        #question { font-size: 32px; font-weight: bold; color: #333; }
+        #answer { font-size: 24px; color: #ff4757; font-weight: bold; margin-top: 10px; }
+
+        /* ボタンエリア */
+        .button-area { display: flex; flex-direction: column; gap: 12px; margin-bottom: 25px; }
+        button { border: none; padding: 18px; border-radius: 15px; font-size: 18px; font-weight: bold; cursor: pointer; }
+        .show-btn { background: #007aff; color: white; width: 100%; }
+        .eval-container { display: none; gap: 10px; width: 100%; }
+        .eval-btn { flex: 1; color: white; font-size: 14px; }
+        .bad { background: #ff4757; }
+        .good { background: #ffa502; }
+        .perfect { background: #2ed573; }
+
+        /* 統計情報のグリッド（ボタンの下に配置） */
+        .stats-grid { 
+            display: grid; 
+            grid-template-columns: repeat(4, 1fr); 
+            gap: 6px; 
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.5); /* 少し透けた白 */
+            border-radius: 15px;
+        }
+        .stat-item { 
+            background: white; padding: 8px 2px; border-radius: 10px; 
+            display: flex; flex-direction: column; align-items: center; 
+            box-shadow: 0 2px 5px rgba(0,0,0,0.03);
+        }
+        .label { font-size: 9px; color: #888; margin-bottom: 2px; }
+        .val { font-size: 13px; font-weight: bold; color: #444; }
+        .stat-item.full { grid-column: 1 / span 4; background: #eef2ff; margin-bottom: 4px; }
+        
+        #saveStatus { font-size: 12px; color: #aaa; margin-top: 10px; height: 1.5em; }
+
+        .reset-link { 
+            position: fixed; bottom: 10px; left: 0; width: 100%; 
+            color: #ff4757; font-size: 11px; text-decoration: underline; 
+            background: none; border: none; cursor: pointer; opacity: 0.7; 
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div id="card">
+            <div style="width: 100%;">
+                <div id="question">読み込み中...</div>
+                <div id="answer" style="display:none;"></div>
+            </div>
+        </div>
+
+        <div class="button-area">
+            <button id="showAnswerBtn" class="show-btn" onclick="flipCard()">答えを見る</button>
+            <div id="evalContainer" class="eval-container">
+                <button class="eval-btn bad" onclick="handleEval('ダメ')">ダメ</button>
+                <button class="eval-btn good" onclick="handleEval('オッケー')">オッケー</button>
+                <button class="eval-btn perfect" onclick="handleEval('完璧')">完璧</button>
+            </div>
+        </div>
+
+        <div id="statsArea" class="stats-grid" style="display:none">
+            <div class="stat-item full"><span class="label">ステータス</span><span id="statStatus" class="val">-</span></div>
+            <div class="stat-item"><span class="label">合計</span><span id="statTotal" class="val">0</span></div>
+            <div class="stat-item"><span class="label">ダメ</span><span id="statBad" class="val">0</span></div>
+            <div class="stat-item"><span class="label">OK</span><span id="statGood" class="val">0</span></div>
+            <div class="stat-item"><span class="label">完璧</span><span id="statPerfect" class="val">0</span></div>
+        </div>
+
+        <div id="saveStatus"></div>
+    </div>
+    
+    <button class="reset-link" onclick="resetAllStats()">学習履歴をすべてリセット</button>
+
+    <script src="script.js"></script>
+</body>
+</html>
+
+-----------------------------------------------------
+backup
+index.html
