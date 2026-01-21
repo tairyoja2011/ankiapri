@@ -27,10 +27,11 @@ async function loadData() {
                 q: cols[0]?.trim() || "", 
                 a: cols[1]?.trim() || "", 
                 status: cols[2]?.trim() || "未着手",
-                bad: cols[3]?.trim() || "0",
-                good: cols[4]?.trim() || "0",
-                perfect: cols[5]?.trim() || "0",
-                total: cols[6]?.trim() || "0"
+                // 文字列ではなく数値(Number)として保持する
+                bad: Number(cols[3]) || 0,
+                good: Number(cols[4]) || 0,
+                perfect: Number(cols[5]) || 0,
+                total: Number(cols[6]) || 0
             };
         }).filter(card => card.status !== "完璧" && !localPerfectList.includes(card.q));
 
@@ -47,6 +48,15 @@ function shuffleArray(array) {
     }
 }
 
+// 画面の統計表示を更新する専用の関数
+function updateStatsDisplay(card) {
+    document.getElementById("statStatus").textContent = card.status;
+    document.getElementById("statTotal").textContent = card.total;
+    document.getElementById("statBad").textContent = card.bad;
+    document.getElementById("statGood").textContent = card.good;
+    document.getElementById("statPerfect").textContent = card.perfect;
+}
+
 function showNextCard() {
     if (queue.length === 0) {
         questionEl.textContent = "全問完了！ 🎉";
@@ -58,24 +68,20 @@ function showNextCard() {
     }
     currentCard = queue.shift();
     
-    // 表示データのセット
     questionEl.textContent = currentCard.q;
     answerEl.textContent = currentCard.a;
-    document.getElementById("statStatus").textContent = currentCard.status;
-    document.getElementById("statTotal").textContent = currentCard.total;
-    document.getElementById("statBad").textContent = currentCard.bad;
-    document.getElementById("statGood").textContent = currentCard.good;
-    document.getElementById("statPerfect").textContent = currentCard.perfect;
+    
+    // 現在保持している数値を表示
+    updateStatsDisplay(currentCard);
 
-    // 表示・非表示の切り替え
-    answerEl.style.display = "none";      // 答えは隠す
-    statsArea.style.display = "grid";     // 統計は最初から出す
+    answerEl.style.display = "none";
+    statsArea.style.display = "grid";
     showAnswerBtn.style.display = "block";
     evalContainer.style.display = "none";
 }
 
 function flipCard() {
-    answerEl.style.display = "block";     // 答えを表示
+    answerEl.style.display = "block";
     showAnswerBtn.style.display = "none";
     evalContainer.style.display = "flex";
 }
@@ -99,9 +105,26 @@ async function saveToSheet(word, rating) {
 }
 
 function handleEval(rating) {
+    // --- 画面上の数値を即座にカウントアップする ---
+    currentCard.status = rating;
+    currentCard.total += 1;
+    if (rating === 'ダメ') currentCard.bad += 1;
+    if (rating === 'オッケー') currentCard.good += 1;
+    if (rating === '完璧') currentCard.perfect += 1;
+
+    // 数値が増えた状態で画面を更新（一瞬見える可能性があるため）
+    updateStatsDisplay(currentCard);
+
+    // スプレッドシートへの送信（バックグラウンド）
     saveToSheet(currentCard.q, rating); 
-    if (rating === 'ダメ') queue.splice(1, 0, currentCard); // 短い間隔で再出題
-    else if (rating === 'オッケー') queue.push(currentCard);
+
+    // 出題順の調整
+    if (rating === 'ダメ') {
+        queue.splice(1, 0, currentCard); // 次の次の位置へ
+    } else if (rating === 'オッケー') {
+        queue.push(currentCard); // 最後尾へ
+    }
+    
     showNextCard();
 }
 
@@ -115,10 +138,9 @@ async function resetAllStats() {
             mode: "no-cors",
             body: JSON.stringify({ action: "reset_all" })
         });
-        saveStatusEl.textContent = "完了！再起動します...";
+        saveStatusEl.textContent = "リセット完了！再起動します...";
         setTimeout(() => location.reload(), 2000);
-    } catch (e) { saveStatusEl.textContent = "失敗"; }
+    } catch (e) { saveStatusEl.textContent = "リセット失敗"; }
 }
 
 loadData();
-
