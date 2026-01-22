@@ -48,15 +48,48 @@ function resetDisplayState() {
     document.getElementById("showAnswerBtn").style.display = "block";
 }
 
+// サブメニューを読み込んだ際に、スプレッドシートの内容を読み込みます。
+async function showSubMenu(title) {
+    isInputMode = false;
+    document.getElementById('selected-book-title').textContent = title;
+    
+    // ここでデータをロード。すでに読み込み済みの場合はスキップする設定も可能です。
+    // allCards.length === 0 の時だけ読み込むようにすれば通信節約になります。
+    if (allCards.length === 0) {
+        await loadData();
+    }
+    
+    changeView('view-submenu');
+}
+
+
 async function startStudyMode(type) {
     isInputMode = false;
-    await loadData();
-    if (type === 'bad') queue = allCards.filter(c => c.bad > 0 || c.status === "未着手" || c.status === "");
-    else if (type === 'good-perfect') queue = allCards.filter(c => c.good > 0 || c.perfect > 0);
-    else queue = allCards.filter(c => c.status !== "完璧");
+    resetDisplayState();
     
-    if (queue.length === 0) return alert("対象がありません");
+    // await loadData(); // ←これを削除またはコメントアウト
+    
+    if (type === 'bad') {
+        queue = allCards.filter(c => c.bad > 0 || c.status === "未着手" || c.status === "");
+    } else if (type === 'good-perfect') {
+        queue = allCards.filter(c => c.good > 0 || c.perfect > 0);
+    } else {
+        queue = allCards.filter(c => c.status !== "完璧");
+    }
+    
+    if (queue.length === 0) return alert("対象の問題がありません");
     queue.sort(() => Math.random() - 0.5);
+    changeView('view-study'); 
+    showNext();
+}
+
+async function startInputMode() {
+    isInputMode = true;
+    resetDisplayState();
+    
+    // await loadData(); // ←これを削除またはコメントアウト
+    
+    queue = [...allCards].sort(() => Math.random() - 0.5);
     changeView('view-study'); 
     showNext();
 }
@@ -75,6 +108,7 @@ function showNext() {
     if (queue.length === 0) {
         document.getElementById("question").textContent = "終了！更新ボタンを押して保存してください";
         document.getElementById("showAnswerBtn").style.display = "none";
+        // 終了時も最後の統計を表示させておく
         return;
     }
     currentCard = queue.shift();
@@ -82,11 +116,11 @@ function showNext() {
     document.getElementById("answer-display").innerText = currentCard.a;
     document.getElementById("answer-edit").value = currentCard.a;
     
-    // 統計表示の更新
-    document.getElementById("statTotal").textContent = currentCard.total;
-    document.getElementById("statBad").textContent = currentCard.bad;
-    document.getElementById("statGood").textContent = currentCard.good;
-    document.getElementById("statPerfect").textContent = currentCard.perfect;
+    // --- ここで画面上の数字を最新の状態に更新 ---
+    document.getElementById("statTotal").textContent = currentCard.total || 0;
+    document.getElementById("statBad").textContent = currentCard.bad || 0;
+    document.getElementById("statGood").textContent = currentCard.good || 0;
+    document.getElementById("statPerfect").textContent = currentCard.perfect || 0;
 
     document.getElementById("user-input-area").style.display = isInputMode ? "block" : "none";
     document.getElementById("user-answer-input").value = "";
@@ -108,13 +142,30 @@ function flipCard() {
 }
 
 function handleEval(rating) {
+    // 1. 統計をメモリ上でカウントアップ (画面反映のため)
+    if (rating === 'ダメ') {
+        currentCard.bad++;
+    } else if (rating === 'オッケー') {
+        currentCard.good++;
+    } else if (rating === '完璧') {
+        currentCard.perfect++;
+    }
+    currentCard.total++; // 合計回数も増やす
+
+    // 2. 送信待ちリストに追加 (GAS送信用)
     pendingUpdates.push({
         word: currentCard.q,
         status: rating,
         user_ans: isInputMode ? document.getElementById("user-answer-input").value.trim() : ""
     });
+    
     updateSyncBadge();
-    if (rating === 'ダメ') queue.splice(0, 0, currentCard); // 1問後に再出題
+
+    // ダメだった場合は少し後で再出題
+    if (rating === 'ダメ') {
+        queue.splice(3, 0, currentCard); 
+    }
+    
     showNext();
 }
 
@@ -214,3 +265,4 @@ async function resetAllStats() {
     alert("完了しました");
     location.reload();
 }
+
