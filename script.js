@@ -186,20 +186,24 @@ async function syncData() {
     btn.disabled = true;
 
     try {
-        const response = await fetch(WRITE_URL, { 
+        await fetch(WRITE_URL, { 
             method: "POST", 
-            // mode: "no-cors", // ← 一旦コメントアウトして、エラーを見えるようにします
+            mode: "no-cors", 
             body: JSON.stringify({ action: "bulk_update", updates: pendingUpdates }) 
         });
 
-        // 成功時の処理
         pendingUpdates = [];
         updateSyncBadge();
-        alert("同期完了！");
+        
+        // --- ここに追記 ---
+        await loadData(); 
+        // ----------------
+
+        alert("同期リクエストを送信しました！\n最新のデータを読み込みました。");
+        
     } catch (e) {
-        console.error("詳細エラー:", e);
-        // ここでエラー内容をアラートに出す
-        alert("同期に失敗しました。\n理由: " + e.message);
+        console.error("Sync Error:", e);
+        alert("通信エラーが発生しました。");
     } finally {
         btn.innerHTML = `更新<span id="pending-count" class="sync-badge">0</span>`;
         btn.disabled = false;
@@ -268,5 +272,6 @@ async function resetAllStats() {
     alert("完了しました");
     location.reload();
 }
+
 
 
