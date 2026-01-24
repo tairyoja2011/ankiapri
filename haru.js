@@ -133,3 +133,40 @@ function sendToSheet(word, status) {
         })
     });
 }
+// 結果を保存する関数
+function saveFinalScore(score) {
+    fetch(WRITE_URL, {
+        method: "POST",
+        mode: "no-cors",
+        body: JSON.stringify({
+            action: "record_result",
+            sheetName: currentUser + currentSubject,
+            score: score
+        })
+    });
+}
+
+// 履歴を表示する関数
+async function showHistory() {
+    const res = await fetch(READ_URL); // 各シートのCSV
+    const csv = await res.text();
+    const rows = csv.split(/\r?\n/);
+    
+    // "(結果履歴)" の行を探す
+    const historyRow = rows.find(r => r.startsWith("(結果履歴)"));
+    const container = document.getElementById('history-list');
+    container.innerHTML = "";
+
+    if (historyRow) {
+        const historyData = historyRow.split(',').slice(7); // H列以降を取得
+        historyData.filter(d => d.trim()).reverse().forEach(item => {
+            const div = document.createElement('div');
+            div.className = "history-item";
+            div.textContent = item;
+            container.appendChild(div);
+        });
+    } else {
+        container.textContent = "まだ きろくが ありません。";
+    }
+    changeView('view-history');
+}
