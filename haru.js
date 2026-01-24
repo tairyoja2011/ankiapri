@@ -75,26 +75,34 @@ function pressKey(k) {
 
 // 5. 答え合わせ & キャラクター
 function checkAns() {
-    const chara = document.getElementById('chara-pop');
-    const charas = ['🐱', '🐶', '🐰', '🦁', '🐼', '🐨'];
+    const layer = document.getElementById('feedback-layer');
+    const msg = document.getElementById('feedback-msg');
+    const ansDisp = document.getElementById('feedback-ans');
     
     if (inputVal === currentAns) {
+        // 正解のとき
         correctCount++;
-        chara.textContent = charas[Math.floor(Math.random() * charas.length)];
-        chara.style.display = 'block';
-        chara.className = 'animate__animated animate__bounceInUp';
-        
-        // シートに記録送信
-        sendToSheet(`${document.getElementById('q-text').textContent}${currentAns}`, "完璧");
+        msg.textContent = "せいかい！";
+        msg.className = "animate__animated animate__zoomIn";
+        ansDisp.textContent = "";
+        layer.style.display = "block";
         
         setTimeout(() => {
-            chara.style.display = 'none';
+            layer.style.display = "none";
             nextQuestion();
-        }, 1000);
+        }, 1200);
     } else {
-        alert("おしい！");
-        inputVal = "";
-        document.getElementById('math-display').textContent = "";
+        // 間違えたとき
+        msg.textContent = "ざんねん！";
+        msg.className = "animate__animated animate__headShake";
+        ansDisp.textContent = "こたえは " + currentAns;
+        layer.style.display = "block";
+        
+        // 不正解の場合は「次へ」ボタンを出すか、3秒待ってから次へ
+        setTimeout(() => {
+            layer.style.display = "none";
+            nextQuestion();
+        }, 3000);
     }
 }
 
