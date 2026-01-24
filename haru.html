@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>きょうだい べんきょう</title>
+    <link rel="icon" href="data:,"> <title>きょうだい べんきょう</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
     <style>
         body { font-family: sans-serif; background: #e0f7fa; margin: 0; text-align: center; overflow-x: hidden; }
@@ -14,25 +14,17 @@
         .menu-btn { width: 100%; padding: 15px; margin: 5px 0; font-size: 18px; border-radius: 15px; border: none; color: white; font-weight: bold; cursor: pointer; }
         .haru-btn { background: #ff9f43; }
         .riku-btn { background: #45b7d1; }
-        
         .mode-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
         #card { background: white; height: 120px; border-radius: 20px; display: flex; align-items: center; justify-content: center; font-size: 40px; font-weight: bold; margin: 15px 0; position: relative; }
         #math-display { font-size: 45px; color: #ff6b6b; height: 60px; font-weight: bold; }
         #progress { font-size: 18px; color: #666; margin-bottom: 5px; }
-
         .ten-key { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; max-width: 300px; margin: 0 auto; }
         .key { background: white; border: 2px solid #ddd; padding: 20px; font-size: 24px; border-radius: 15px; font-weight: bold; }
-        .key:active { background: #ffeaa7; }
         .key-enter { background: #55efc4; grid-column: span 3; color: white; }
-
         #result-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.95); z-index: 100; display: none; flex-direction: column; align-items: center; justify-content: center; }
-        .pass-text { font-size: 60px; color: #ff4757; font-weight: bold; margin-bottom: 20px; }
-        
-        /* 演出用レイヤー */
         #feedback-layer { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 200; width: 100%; pointer-events: none; }
         #feedback-msg { font-size: 80px; font-weight: bold; text-shadow: 3px 3px 0 white; }
         #feedback-ans { font-size: 30px; background: rgba(255,255,255,0.9); padding: 10px; border-radius: 10px; border: 2px solid #54a0ff; display: inline-block; margin-top: 10px; }
-
         .history-btn { background: #eee; border: none; padding: 10px; border-radius: 10px; font-size: 14px; margin-top: 5px; cursor: pointer; }
         #history-list { text-align: left; max-height: 300px; overflow-y: auto; background: white; padding: 15px; border-radius: 15px; }
         .history-item { padding: 5px 0; border-bottom: 1px solid #eee; font-size: 14px; }
@@ -72,19 +64,11 @@
             <div id="progress">だい 1 / 10 もん</div>
             <div id="card"><span id="q-text">準備中...</span></div>
             <div id="math-display"></div>
-            
             <div id="tenkey-area" class="ten-key">
-                <button class="key" onclick="pressKey('1')">1</button>
-                <button class="key" onclick="pressKey('2')">2</button>
-                <button class="key" onclick="pressKey('3')">3</button>
-                <button class="key" onclick="pressKey('4')">4</button>
-                <button class="key" onclick="pressKey('5')">5</button>
-                <button class="key" onclick="pressKey('6')">6</button>
-                <button class="key" onclick="pressKey('7')">7</button>
-                <button class="key" onclick="pressKey('8')">8</button>
-                <button class="key" onclick="pressKey('9')">9</button>
-                <button class="key" style="background:#fab1a0" onclick="pressKey('C')">C</button>
-                <button class="key" onclick="pressKey('0')">0</button>
+                <button class="key" onclick="pressKey('1')">1</button><button class="key" onclick="pressKey('2')">2</button><button class="key" onclick="pressKey('3')">3</button>
+                <button class="key" onclick="pressKey('4')">4</button><button class="key" onclick="pressKey('5')">5</button><button class="key" onclick="pressKey('6')">6</button>
+                <button class="key" onclick="pressKey('7')">7</button><button class="key" onclick="pressKey('8')">8</button><button class="key" onclick="pressKey('9')">9</button>
+                <button class="key" style="background:#fab1a0" onclick="pressKey('C')">C</button><button class="key" onclick="pressKey('0')">0</button>
                 <button class="key key-enter" onclick="checkAns()">OK！</button>
             </div>
         </div>
@@ -97,7 +81,7 @@
 
         <div id="result-screen">
             <div id="pass-msg" class="pass-text animate__animated">合格！</div>
-            <div id="score-msg" style="font-size:30px; margin-bottom:30px;">10点 / 10点</div>
+            <div id="score-msg" style="font-size:30px;">0点 / 10点</div>
             <div id="chara-large" style="font-size:100px;">🎉</div>
             <button class="menu-btn haru-btn" style="width:200px; margin-top:30px;" onclick="location.reload()">もどる</button>
         </div>
