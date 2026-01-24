@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
     <style>
         body { font-family: sans-serif; background: #e0f7fa; margin: 0; text-align: center; overflow-x: hidden; }
-        .container { padding: 10px; }
+        .container { padding: 10px; padding-bottom: 80px; }
         .view { display: none; }
         .user-sec { background: white; border-radius: 20px; padding: 15px; margin-bottom: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
         .user-name { font-size: 24px; font-weight: bold; margin-bottom: 10px; }
@@ -15,25 +15,27 @@
         .haru-btn { background: #ff9f43; }
         .riku-btn { background: #45b7d1; }
         
-        /* 算数モード選択 */
         .mode-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        
-        /* カードとキャラクター */
-        #card { background: white; height: 100px; border-radius: 20px; display: flex; align-items: center; justify-content: center; font-size: 40px; font-weight: bold; margin: 15px 0; position: relative; }
-        #chara-pop { position: absolute; top: -60px; right: 10px; font-size: 50px; display: none; }
+        #card { background: white; height: 120px; border-radius: 20px; display: flex; align-items: center; justify-content: center; font-size: 40px; font-weight: bold; margin: 15px 0; position: relative; }
         #math-display { font-size: 45px; color: #ff6b6b; height: 60px; font-weight: bold; }
         #progress { font-size: 18px; color: #666; margin-bottom: 5px; }
 
-        /* テンキー */
         .ten-key { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; max-width: 300px; margin: 0 auto; }
         .key { background: white; border: 2px solid #ddd; padding: 20px; font-size: 24px; border-radius: 15px; font-weight: bold; }
         .key:active { background: #ffeaa7; }
         .key-enter { background: #55efc4; grid-column: span 3; color: white; }
 
-        /* 合格演出 */
         #result-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.95); z-index: 100; display: none; flex-direction: column; align-items: center; justify-content: center; }
         .pass-text { font-size: 60px; color: #ff4757; font-weight: bold; margin-bottom: 20px; }
-        .score-text { font-size: 30px; margin-bottom: 30px; }
+        
+        /* 演出用レイヤー */
+        #feedback-layer { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 200; width: 100%; pointer-events: none; }
+        #feedback-msg { font-size: 80px; font-weight: bold; text-shadow: 3px 3px 0 white; }
+        #feedback-ans { font-size: 30px; background: rgba(255,255,255,0.9); padding: 10px; border-radius: 10px; border: 2px solid #54a0ff; display: inline-block; margin-top: 10px; }
+
+        .history-btn { background: #eee; border: none; padding: 10px; border-radius: 10px; font-size: 14px; margin-top: 5px; cursor: pointer; }
+        #history-list { text-align: left; max-height: 300px; overflow-y: auto; background: white; padding: 15px; border-radius: 15px; }
+        .history-item { padding: 5px 0; border-bottom: 1px solid #eee; font-size: 14px; }
     </style>
 </head>
 <body>
@@ -44,11 +46,13 @@
                 <div class="user-name" style="color:#ff9f43">はるくん</div>
                 <button class="menu-btn haru-btn" onclick="showModes('はる')">🔢 さんすう</button>
                 <button class="menu-btn haru-btn" onclick="startKanji('はる')">✍️ かんじ</button>
+                <button class="history-btn" onclick="showHistory('はる')">📜 けっかを見る</button>
             </div>
             <div class="user-sec">
                 <div class="user-name" style="color:#45b7d1">りくくん</div>
                 <button class="menu-btn riku-btn" onclick="showModes('りく')">🔢 さんすう</button>
                 <button class="menu-btn riku-btn" onclick="startKanji('りく')">✍️ かんじ</button>
+                <button class="history-btn" onclick="showHistory('りく')">📜 けっかを見る</button>
             </div>
         </div>
 
@@ -66,10 +70,7 @@
 
         <div id="view-study" class="view">
             <div id="progress">だい 1 / 10 もん</div>
-            <div id="card">
-                <div id="chara-pop" class="animate__animated">🐱</div>
-                <span id="q-text">準備中...</span>
-            </div>
+            <div id="card"><span id="q-text">準備中...</span></div>
             <div id="math-display"></div>
             
             <div id="tenkey-area" class="ten-key">
@@ -88,32 +89,24 @@
             </div>
         </div>
 
+        <div id="view-history" class="view">
+            <h2 id="history-title-ui">これまでの けっか</h2>
+            <div id="history-list"></div>
+            <button class="menu-btn" style="background:#ccc; margin-top:20px" onclick="location.reload()">もどる</button>
+        </div>
+
         <div id="result-screen">
             <div id="pass-msg" class="pass-text animate__animated">合格！</div>
-            <div id="score-msg" class="score-text">10てん / 10てん</div>
+            <div id="score-msg" style="font-size:30px; margin-bottom:30px;">10点 / 10点</div>
             <div id="chara-large" style="font-size:100px;">🎉</div>
-            <button class="menu-btn haru-btn" style="width:200px" onclick="location.reload()">トップへもどる</button>
+            <button class="menu-btn haru-btn" style="width:200px; margin-top:30px;" onclick="location.reload()">もどる</button>
+        </div>
+
+        <div id="feedback-layer">
+            <div id="feedback-msg" class="animate__animated"></div>
+            <div id="feedback-ans"></div>
         </div>
     </div>
-    <div class="user-sec">
-        <div class="user-name">はるくん</div>
-        <button class="menu-btn" onclick="startMath('はる')">さんすう</button>
-        <button class="menu-btn" onclick="startKanji('はる')">かんじ</button>
-        <button class="history-btn" onclick="openHistory('はる')">📜 けっかを見る</button>
-    </div>
-    
-    <div id="view-history" class="view">
-        <h2 id="history-title">これまでの けっか</h2>
-        <div id="history-list" style="text-align:left; padding:20px; background:white; border-radius:15px;"></div>
-        <button class="menu-btn" onclick="location.reload()" style="background:#ccc">もどる</button>
-    </div>
-    
-    <div id="feedback-layer" style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); z-index:200;">
-        <h1 id="feedback-msg" class="animate__animated" style="font-size:100px;"></h1>
-        <h2 id="feedback-ans" style="font-size:40px; color:red; background:white;"></h2>
-    </div>
-
-    
     <script src="haru.js"></script>
 </body>
 </html>
