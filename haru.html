@@ -95,6 +95,25 @@
             <button class="menu-btn haru-btn" style="width:200px" onclick="location.reload()">トップへもどる</button>
         </div>
     </div>
+    <div class="user-sec">
+        <div class="user-name">はるくん</div>
+        <button class="menu-btn" onclick="startMath('はる')">さんすう</button>
+        <button class="menu-btn" onclick="startKanji('はる')">かんじ</button>
+        <button class="history-btn" onclick="openHistory('はる')">📜 けっかを見る</button>
+    </div>
+    
+    <div id="view-history" class="view">
+        <h2 id="history-title">これまでの けっか</h2>
+        <div id="history-list" style="text-align:left; padding:20px; background:white; border-radius:15px;"></div>
+        <button class="menu-btn" onclick="location.reload()" style="background:#ccc">もどる</button>
+    </div>
+    
+    <div id="feedback-layer" style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); z-index:200;">
+        <h1 id="feedback-msg" class="animate__animated" style="font-size:100px;"></h1>
+        <h2 id="feedback-ans" style="font-size:40px; color:red; background:white;"></h2>
+    </div>
+
+    
     <script src="haru.js"></script>
 </body>
 </html>
