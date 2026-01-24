@@ -3,58 +3,77 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>はるくんの べんきょうアプリ</title>
+    <title>兄弟のべんきょうアプリ</title>
     <style>
-        /* お子様向けポップなデザイン */
-        body { font-family: "Hiragino Kaku Gothic ProN", sans-serif; background: #fff9e6; margin: 0; padding: 0; color: #333; }
-        .container { width: 95%; max-width: 500px; margin: 0 auto; padding: 20px 0; text-align: center; }
-        
-        /* メニューボタン */
-        .menu-card { 
-            background: white; padding: 30px; border-radius: 20px; 
-            box-shadow: 0 8px 0 #ddd; border: 3px solid #555; 
-            font-size: 24px; font-weight: bold; width: 100%; 
-            margin-bottom: 20px; cursor: pointer; transition: 0.2s;
-        }
-        .menu-card:active { transform: translateY(4px); box-shadow: 0 4px 0 #ddd; }
-        .math-btn { border-color: #ff6b6b; color: #ff6b6b; }
-        .kanji-btn { border-color: #4ecdc4; color: #4ecdc4; }
-        .adult-btn { border-color: #45b7d1; color: #45b7d1; font-size: 16px; }
-
-        /* 計算画面 */
-        #question { font-size: 60px; font-weight: bold; margin: 40px 0; }
-        .calc-input { font-size: 40px; width: 80%; padding: 10px; border-radius: 10px; border: 3px solid #ccc; text-align: center; }
-        
+        body { font-family: sans-serif; background: #f0f9ff; margin: 0; text-align: center; }
+        .container { padding: 15px; }
         .view { display: none; }
-        .top-left-back { position: absolute; top: 15px; left: 15px; background: #eee; padding: 8px 15px; border-radius: 20px; border: none; font-weight: bold; }
+        
+        /* メニューデザイン */
+        .user-sec { background: white; border-radius: 20px; padding: 15px; margin-bottom: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .user-name { font-size: 22px; font-weight: bold; margin-bottom: 10px; }
+        .btn-group { display: flex; gap: 10px; }
+        .menu-btn { flex: 1; padding: 20px; font-size: 18px; border-radius: 15px; border: none; color: white; font-weight: bold; cursor: pointer; }
+        .haru-color { background: #ff9f43; }
+        .riku-color { background: #45b7d1; }
+        
+        /* 問題表示 */
+        #card { background: white; height: 120px; border-radius: 20px; display: flex; align-items: center; justify-content: center; font-size: 48px; font-weight: bold; margin: 20px 0; }
+        #math-display { font-size: 40px; color: #ff6b6b; margin-bottom: 10px; height: 50px; }
+
+        /* テンキー */
+        .ten-key { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; max-width: 300px; margin: 0 auto; }
+        .key { background: #fff; border: 2px solid #ddd; padding: 20px; font-size: 24px; border-radius: 10px; font-weight: bold; cursor: pointer; }
+        .key:active { background: #eee; }
+        .key-clear { background: #fab1a0; }
+        .key-enter { background: #55efc4; grid-column: span 3; padding: 15px; }
+
+        .back-btn { margin-top: 20px; padding: 10px; border: none; background: #ccc; border-radius: 10px; }
     </style>
 </head>
 <body>
     <div class="container">
         <div id="view-top" class="view" style="display:block">
-            <h1>☀️ はるくんの べんきょう</h1>
-            <button class="menu-card math-btn" onclick="startMathMode()">🔢 さんすう (計算)</button>
-            <button class="menu-card kanji-btn" onclick="showSubMenu('漢字')">✍️ かんじ (漢字)</button>
-            <hr>
-            <button class="menu-card adult-btn" onclick="showSubMenu('応用情報')">💻 おとなの勉強</button>
+            <div class="user-sec">
+                <div class="user-name" style="color:#ff9f43">☀️ はるくん</div>
+                <div class="btn-group">
+                    <button class="menu-btn haru-color" onclick="startMode('はる', '算数')">🔢 さんすう</button>
+                    <button class="menu-btn haru-color" onclick="startMode('はる', '漢字')">✍️ かんじ</button>
+                </div>
+            </div>
+            <div class="user-sec">
+                <div class="user-name" style="color:#45b7d1">❄️ りくくん</div>
+                <div class="btn-group">
+                    <button class="menu-btn riku-color" onclick="startMode('りく', '算数')">🔢 さんすう</button>
+                    <button class="menu-btn riku-color" onclick="startMode('りく', '漢字')">✍️ かんじ</button>
+                </div>
+            </div>
         </div>
 
         <div id="view-study" class="view">
-            <button class="top-left-back" onclick="location.reload()">✕ やめる</button>
-            <div id="question">読み込み中...</div>
+            <div id="card">準備中...</div>
+            <div id="math-display"></div>
             
-            <div id="math-input-area" style="display:none;">
-                <input type="number" id="math-answer" class="calc-input" placeholder="答えは？">
-                <button class="menu-card math-btn" style="margin-top:20px;" onclick="checkMathAnswer()">決定！</button>
+            <div id="tenkey-area" class="ten-key">
+                <button class="key" onclick="pressKey('1')">1</button>
+                <button class="key" onclick="pressKey('2')">2</button>
+                <button class="key" onclick="pressKey('3')">3</button>
+                <button class="key" onclick="pressKey('4')">4</button>
+                <button class="key" onclick="pressKey('5')">5</button>
+                <button class="key" onclick="pressKey('6')">6</button>
+                <button class="key" onclick="pressKey('7')">7</button>
+                <button class="key" onclick="pressKey('8')">8</button>
+                <button class="key" onclick="pressKey('9')">9</button>
+                <button class="key key-clear" onclick="pressKey('C')">C</button>
+                <button class="key" onclick="pressKey('0')">0</button>
+                <button class="key key-enter" onclick="checkMath()">OK！</button>
             </div>
 
-            <div id="study-buttons" style="display:none;">
-                <button id="showAnswerBtn" class="menu-card" onclick="flipCard()">こたえをみる</button>
-                <div id="evalContainer" style="display:none; gap:10px;">
-                    <button class="menu-card" style="background:#ff4757; color:white;" onclick="handleEval('ダメ')">× だめ</button>
-                    <button class="menu-card" style="background:#2ed573; color:white;" onclick="handleEval('完璧')">○ できた！</button>
-                </div>
+            <div id="kanji-area" style="display:none;">
+                <button class="menu-btn haru-color" style="width:100%" onclick="flipKanji()">こたえをみる</button>
             </div>
+
+            <button class="back-btn" onclick="location.reload()">もどる</button>
         </div>
     </div>
     <script src="haru.js"></script>
