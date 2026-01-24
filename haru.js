@@ -1,6 +1,8 @@
 const READ_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQQ0eL0bQlxdzjjo1ISq6o2fYxr7qzHPtf6LCVCwf9IYCM5n5OK8LvWHISzRUCHomgYp4rNOHHWEskp/pubhtml";
 const WRITE_URL = "https://script.google.com/macros/s/AKfycbyXDQFcgBazg4oX5b2h41ZGeYgD3hY7_NJzYjDHyRosUncAVZN9SEP_TUaCl0Aj1Hyf/exec";
 
+
+
 let currentUser = "";
 let currentSubject = "算数";
 let currentType = ""; 
@@ -72,7 +74,6 @@ function pressKey(k) {
     document.getElementById('math-display').textContent = inputVal;
 }
 
-// --- 正解・不正解のアニメーション演出 ---
 function checkAns() {
     const layer = document.getElementById('feedback-layer');
     const msg = document.getElementById('feedback-msg');
@@ -84,10 +85,10 @@ function checkAns() {
         correctCount++;
         msg.textContent = "せいかい！";
         msg.style.color = "#ff4757";
-        msg.className = "animate__animated animate__bounceIn"; // 跳ねるアニメ
+        msg.className = "animate__animated animate__bounceIn"; 
         ansDisp.style.display = "none";
 
-        // スプレッドシートへ正解を記録
+        // スプレッドシートへ送信
         sendToSheet(document.getElementById('q-text').textContent + currentAns, "完璧");
 
         setTimeout(() => {
@@ -97,7 +98,7 @@ function checkAns() {
     } else {
         msg.textContent = "ざんねん！";
         msg.style.color = "#54a0ff";
-        msg.className = "animate__animated animate__shakeX"; // 震えるアニメ
+        msg.className = "animate__animated animate__shakeX"; 
         ansDisp.textContent = "こたえは " + currentAns;
         ansDisp.style.display = "inline-block";
         
@@ -115,36 +116,36 @@ function showFinalResult() {
     const msg = document.getElementById('pass-msg');
     if (correctCount >= 8) {
         msg.textContent = "合格！！";
-        msg.style.color = "#ff4757";
         msg.className = "pass-text animate__animated animate__jackInTheBox animate__infinite";
     } else {
         msg.textContent = "おしい！";
-        msg.style.color = "#54a0ff";
         msg.className = "pass-text animate__animated animate__fadeIn";
     }
-    // スプレッドシートに点数を保存
+    // 10問終了の点数を保存
     saveFinalScore(correctCount);
 }
 
 function sendToSheet(word, status) {
+    const sName = currentUser + currentSubject; // 例: はる算数
     fetch(WRITE_URL, {
         method: "POST",
         mode: "no-cors",
         body: JSON.stringify({
             action: "bulk_update",
-            sheetName: currentUser + currentSubject,
+            sheetName: sName,
             updates: [{ word: word, status: status }]
         })
     });
 }
 
 function saveFinalScore(score) {
+    const sName = currentUser + currentSubject;
     fetch(WRITE_URL, {
         method: "POST",
         mode: "no-cors",
         body: JSON.stringify({
             action: "record_result",
-            sheetName: currentUser + currentSubject,
+            sheetName: sName,
             score: score
         })
     });
