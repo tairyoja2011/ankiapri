@@ -1,5 +1,5 @@
-const READ_URL = "新しいスプレッドシートの公開CSVのURL";
-const WRITE_URL = "新しいGASのURL";
+const READ_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQQ0eL0bQlxdzjjo1ISq6o2fYxr7qzHPtf6LCVCwf9IYCM5n5OK8LvWHISzRUCHomgYp4rNOHHWEskp/pubhtml";
+const WRITE_URL = "https://script.google.com/macros/s/AKfycbyXDQFcgBazg4oX5b2h41ZGeYgD3hY7_NJzYjDHyRosUncAVZN9SEP_TUaCl0Aj1Hyf/exec";
 
 let currentUser = "";
 let currentType = ""; // "+" "-" "*" "/" "mix"
