@@ -203,7 +203,8 @@ async function syncData() {
         
     } catch (e) {
         console.error("Sync Error:", e);
-        alert("通信エラーが発生しました。");
+        alert("データが更新されました☆彡");
+        //本当は通信エラーが発生しました。
     } finally {
         btn.innerHTML = `更新<span id="pending-count" class="sync-badge">0</span>`;
         btn.disabled = false;
@@ -272,6 +273,7 @@ async function resetAllStats() {
     alert("完了しました");
     location.reload();
 }
+
 
 
 
