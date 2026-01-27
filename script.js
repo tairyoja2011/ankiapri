@@ -67,7 +67,10 @@ async function startStudyMode(type) {
     isInputMode = false;
     resetDisplayState();
     
-    // await loadData(); // ←これを削除またはコメントアウト
+    // もし中止後に allCards が空になっていたら再ロードする安全策
+    if (allCards.length === 0) {
+        await loadData();
+    }
     
     if (type === 'bad') {
         queue = allCards.filter(c => c.bad > 0 || c.status === "未着手" || c.status === "");
@@ -78,6 +81,8 @@ async function startStudyMode(type) {
     }
     
     if (queue.length === 0) return alert("対象の問題がありません");
+    
+    // シャッフルして開始
     queue.sort(() => Math.random() - 0.5);
     changeView('view-study'); 
     showNext();
@@ -105,18 +110,25 @@ async function startInputMode() {
 
 function showNext() {
     resetDisplayState();
-    if (queue.length === 0) {
+    
+    // 問題のキュー（残り）が空の場合
+    if (!queue || queue.length === 0) {
         document.getElementById("question").textContent = "終了！更新ボタンを押して保存してください";
+        document.getElementById("question").style.display = "block"; // 修正モードで隠れている場合があるため
         document.getElementById("showAnswerBtn").style.display = "none";
-        // 終了時も最後の統計を表示させておく
         return;
     }
+    
     currentCard = queue.shift();
+    
+    // 修正モードから戻った時のために表示状態を確実に戻す
+    document.getElementById("question").style.display = "block";
+    document.getElementById("answer-display").style.display = "none"; 
+    
     document.getElementById("question").textContent = currentCard.q;
     document.getElementById("answer-display").innerText = currentCard.a;
-    document.getElementById("answer-edit").value = currentCard.a;
     
-    // --- ここで画面上の数字を最新の状態に更新 ---
+    // 統計の表示更新
     document.getElementById("statTotal").textContent = currentCard.total || 0;
     document.getElementById("statBad").textContent = currentCard.bad || 0;
     document.getElementById("statGood").textContent = currentCard.good || 0;
@@ -214,6 +226,9 @@ async function syncData() {
 
 function stopStudy() {
     if (pendingUpdates.length > 0 && !confirm("未送信の統計データがありますが中止しますか？")) return;
+    
+    // 表示をリセットしてサブメニューへ
+    document.getElementById("question").textContent = "読み込み中...";
     changeView('view-submenu');
 }
 
@@ -351,6 +366,7 @@ async function resetAllStats() {
     alert("完了しました");
     location.reload();
 }
+
 
 
 
