@@ -228,6 +228,35 @@ async function updateCurrentCardContent() {
     alert("修正しました");
 }
 
+async function deleteCurrentCard() {
+    if (!confirm("この問題を完全に削除しますか？\n（スプレッドシートからも削除されます）")) return;
+
+    const btn = document.getElementById("delete-btn");
+    btn.textContent = "削除中...";
+    btn.disabled = true;
+
+    try {
+        // GASへ削除命令を送る
+        await fetch(WRITE_URL, { 
+            method: "POST", 
+            mode: "no-cors", 
+            body: JSON.stringify({ action: "delete_card", word: currentCard.q }) 
+        });
+
+        alert("削除しました。");
+        
+        // メモリ上のデータ(allCards)からも削除
+        allCards = allCards.filter(c => c.q !== currentCard.q);
+        
+        // 次の問題へ
+        showNext();
+    } catch (e) {
+        alert("削除に失敗しました");
+        btn.textContent = "問題を削除する";
+        btn.disabled = false;
+    }
+}
+
 async function addNewCard() {
     const q = document.getElementById("new-q").value.trim();
     const a = document.getElementById("new-a").value.trim();
@@ -273,6 +302,7 @@ async function resetAllStats() {
     alert("完了しました");
     location.reload();
 }
+
 
 
 
