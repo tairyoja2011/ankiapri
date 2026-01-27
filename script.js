@@ -217,14 +217,35 @@ function stopStudy() {
     changeView('view-submenu');
 }
 
+// 保存処理：問題文も送信するように変更
 async function updateCurrentCardContent() {
-    const newA = document.getElementById("answer-edit").value;
-    if(!confirm("即座にスプレッドシートの正解データを修正しますか？")) return;
-    await fetch(WRITE_URL, { method: "POST", mode: "no-cors", body: JSON.stringify({ action: "update_content", word: currentCard.q, new_answer: newA }) });
+    const newQ = document.getElementById("question-edit").value.trim();
+    const newA = document.getElementById("answer-edit").value.trim();
+    
+    if(!confirm("スプレッドシートのデータを修正しますか？")) return;
+
+    await fetch(WRITE_URL, { 
+        method: "POST", 
+        mode: "no-cors", 
+        body: JSON.stringify({ 
+            action: "update_content", 
+            old_word: currentCard.q, // 検索キーとして元の問題文を送る
+            new_word: newQ, 
+            new_answer: newA 
+        }) 
+    });
+
+    // メモリ上のデータも更新
+    currentCard.q = newQ;
     currentCard.a = newA;
+    
+    // 表示を元に戻す
+    document.getElementById("question").textContent = newQ;
     document.getElementById("answer-display").innerText = newA;
     document.getElementById("edit-mode-area").style.display = "none";
+    document.getElementById("question").style.display = "block";
     document.getElementById("answer-display").style.display = "block";
+    
     alert("修正しました");
 }
 
@@ -268,10 +289,17 @@ async function addNewCard() {
     changeView('view-submenu');
 }
 
+// 修正モードに切り替える際、今の問題文もセットする
 function toggleEditMode() {
     document.getElementById("edit-mode-area").style.display = "block";
     document.getElementById("answer-display").style.display = "none";
+    document.getElementById("question").style.display = "none"; // 元の問題表示を隠す
     document.getElementById("edit-toggle-btn").style.display = "none";
+    document.getElementById("delete-btn").style.display = "none";
+    
+    // textareaに今の内容をセット
+    document.getElementById("question-edit").value = currentCard.q;
+    document.getElementById("answer-edit").value = currentCard.a;
 }
 
 async function startListMode() {
@@ -302,6 +330,7 @@ async function resetAllStats() {
     alert("完了しました");
     location.reload();
 }
+
 
 
 
