@@ -137,8 +137,7 @@ function showNext() {
     document.getElementById("user-input-area").style.display = isInputMode ? "block" : "none";
     document.getElementById("user-answer-input").value = "";
 }
-
-function flipCard() {
+function flipCard() {
     if (isInputMode) {
         const inputVal = document.getElementById("user-answer-input").value.trim();
         document.getElementById("current-user-ans").innerText = inputVal || "(未入力)";
@@ -148,11 +147,19 @@ function flipCard() {
         document.getElementById("comparison-area").style.display = "block";
         document.getElementById("edit-toggle-btn").style.display = "none";
     }
-    document.getElementById("answer-container").style.display = "block";
+
+    // --- ここを確実に修正 ---
+    document.getElementById("answer-display").style.display = "block"; // 回答を表示
+    document.getElementById("answer-container").style.display = "block"; // コンテナを表示
     document.getElementById("showAnswerBtn").style.display = "none";
     document.getElementById("evalContainer").style.display = "flex";
 }
 
+
+
+
+
+    
 function handleEval(rating) {
     // 1. 統計をメモリ上でカウントアップ (画面反映のため)
     if (rating === 'ダメ') {
