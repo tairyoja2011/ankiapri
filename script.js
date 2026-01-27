@@ -222,58 +222,79 @@ async function updateCurrentCardContent() {
     const newQ = document.getElementById("question-edit").value.trim();
     const newA = document.getElementById("answer-edit").value.trim();
     
+    if(!newQ || !newA) return alert("問題と回答を入力してください");
     if(!confirm("スプレッドシートのデータを修正しますか？")) return;
 
-    await fetch(WRITE_URL, { 
-        method: "POST", 
-        mode: "no-cors", 
-        body: JSON.stringify({ 
-            action: "update_content", 
-            old_word: currentCard.q, // 検索キーとして元の問題文を送る
-            new_word: newQ, 
-            new_answer: newA 
-        }) 
-    });
+    try {
+        await fetch(WRITE_URL, { 
+            method: "POST", 
+            mode: "no-cors", 
+            body: JSON.stringify({ 
+                action: "update_content", 
+                old_word: currentCard.q, // 検索キー
+                new_word: newQ, 
+                new_answer: newA 
+            }) 
+        });
 
-    // メモリ上のデータも更新
-    currentCard.q = newQ;
-    currentCard.a = newA;
-    
-    // 表示を元に戻す
-    document.getElementById("question").textContent = newQ;
-    document.getElementById("answer-display").innerText = newA;
-    document.getElementById("edit-mode-area").style.display = "none";
-    document.getElementById("question").style.display = "block";
-    document.getElementById("answer-display").style.display = "block";
-    
-    alert("修正しました");
+        // メモリ上のデータ(allCards)も同期をとる
+        // これをしないと「一覧」や「次の問題」で古いデータが出てしまいます
+        allCards = allCards.map(c => {
+            if (c.q === currentCard.q) {
+                return { ...c, q: newQ, a: newA };
+            }
+            return c;
+        });
+
+        // 現在のカード情報を更新
+        currentCard.q = newQ;
+        currentCard.a = newA;
+        
+        // 表示を元に戻す
+        document.getElementById("question").textContent = newQ;
+        document.getElementById("answer-display").innerText = newA;
+        
+        // 編集エリアを閉じて元の表示を出す
+        document.getElementById("edit-mode-area").style.display = "none";
+        document.getElementById("question").style.display = "block";
+        document.getElementById("answer-display").style.display = "block";
+        document.getElementById("edit-toggle-btn").style.display = "block";
+        document.getElementById("delete-btn").style.display = "inline"; // 削除ボタンも再表示
+        
+        alert("修正しました！数秒後にシートに反映されます。");
+    } catch (e) {
+        alert("修正の送信に失敗しました");
+    }
 }
 
 async function deleteCurrentCard() {
     if (!confirm("この問題を完全に削除しますか？\n（スプレッドシートからも削除されます）")) return;
 
     const btn = document.getElementById("delete-btn");
+    const originalText = "問題を削除する"; // 元のテキストを保持
     btn.textContent = "削除中...";
     btn.disabled = true;
 
     try {
-        // GASへ削除命令を送る
         await fetch(WRITE_URL, { 
             method: "POST", 
             mode: "no-cors", 
             body: JSON.stringify({ action: "delete_card", word: currentCard.q }) 
         });
 
-        alert("削除しました。");
+        alert("削除リクエストを送信しました。");
         
-        // メモリ上のデータ(allCards)からも削除
+        // メモリ上のデータから削除
         allCards = allCards.filter(c => c.q !== currentCard.q);
         
-        // 次の問題へ
+        // 次の問題へ（showNextの中でボタンの表示状態はリセットされます）
         showNext();
     } catch (e) {
+        console.error("Delete Error:", e);
         alert("削除に失敗しました");
-        btn.textContent = "問題を削除する";
+    } finally {
+        // 万が一 showNext が呼ばれなかった場合やエラー時のために状態を戻す
+        btn.textContent = originalText;
         btn.disabled = false;
     }
 }
@@ -330,6 +351,7 @@ async function resetAllStats() {
     alert("完了しました");
     location.reload();
 }
+
 
 
 
