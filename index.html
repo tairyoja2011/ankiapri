@@ -86,17 +86,31 @@
                     <div id="user-input-area" style="display:none; margin-top:10px;">
                         <textarea id="user-answer-input" placeholder="答えを入力"></textarea>
                     </div>
-                    <div id="answer-container" style="display:none; margin-top:15px;">
+
+
+                     <div id="answer-container" style="display:none; margin-top:15px;">
                         <div id="answer-display"></div>
                         <div id="comparison-area" style="display:none;">
                             <div style="font-size:12px; color:#e67e22; margin-top:5px;">今回: <span id="current-user-ans"></span></div>
                             <div style="font-size:12px; color:#7f8c8d;">前回: <span id="last-user-ans"></span></div>
                         </div>
-                        <button id="edit-toggle-btn" style="margin-top:10px; background:none; border:none; color:#aaa; text-decoration:underline; cursor:pointer;" onclick="toggleEditMode()">内容を修正する</button>
+                    
+                        <button id="edit-toggle-btn" style="margin-top:10px; background:none; border:none; color:#aaa; 
+                            text-decoration:underline; cursor:pointer;" onclick="toggleEditMode()">内容を修正する</button>
+                        <button id="delete-btn" style="margin-top:10px; margin-left:15px; background:none; border:none; 
+                            color:#ff4757; text-decoration:underline; cursor:pointer;" onclick="deleteCurrentCard()">問題を削除する</button>
                         <div id="edit-mode-area" style="display:none;">
                             <textarea id="answer-edit" style="margin-top:10px;"></textarea>
                             <button class="show-btn" style="font-size:14px; margin-top:10px;" onclick="updateCurrentCardContent()">修正を保存 (即時同期)</button>
                         </div>
+                    </div>
+
+                        
+                        <div id="edit-mode-area" style="display:none;">
+                            <textarea id="answer-edit" style="margin-top:10px;"></textarea>
+                            <button class="show-btn" style="font-size:14px; margin-top:10px;" onclick="updateCurrentCardContent()">修正を保存 (即時同期)</button>
+                        </div>
+                        
                     </div>
                 </div>
             </div>
@@ -134,6 +148,7 @@
     <script src="script.js"></script>
 </body>
 </html>
+
 
 
 
