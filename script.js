@@ -148,45 +148,35 @@ function flipCard() {
 async function askGemini() {
     if (!currentCard) return;
 
-    const prompt = `
-以下の内容について解説してください。
-単語帳のデータを修正したいので、以下の2段階で回答してください。
+    // Geminiへの指示文
+    const prompt = `以下の内容について、1.【要約版】と2.【詳細版】で解説してください。\n\n問題：${currentCard.q}\n現在の答え：${currentCard.a}`;
 
-1. 【要約版】（そのまま単語帳の「答え」欄に貼り付けられるような、短く簡潔な説明）
-2. 【詳細版】（背景や関連知識を含めた、理解を深めるための詳しい解説）
-
-問題：${currentCard.q}
-現在の答え：${currentCard.a}
-`.trim();
-
-    // クリップボードにコピー（スマホアプリだとURL経由で文字が渡らないことが多いため、これが一番確実です）
     try {
+        // 【重要】クリップボードにコピー
         await navigator.clipboard.writeText(prompt);
+        
+        // ユーザーへの通知（これがないとコピーされたことに気づきにくいため）
+        alert("プロンプトをコピーしました！\nGeminiが開いたら、入力欄に「貼り付け」してください。");
     } catch (err) {
-        console.error("コピー失敗", err);
+        console.error("コピーに失敗しました:", err);
+        // iPhoneのSafariなど、一部環境でコピーに失敗した場合の予備通知
+        alert("コピーに失敗したため、手動で入力してください。");
     }
 
-    const query = encodeURIComponent(prompt);
-    
     // デバイス判定
     const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
-    let url;
     if (isMobile) {
-        // スマホ用：Geminiアプリを起動するディープリンク（iOS/Android共通）
-        // アプリがインストールされていればアプリで、なければブラウザで開きます
-        url = `googlegemini://gemini.google.com/app?q=${query}`;
-        
-        // フォールバック（アプリが起動しなかった時用）
+        // スマホ：アプリ起動を試みる
+        window.location.href = "googlegemini://gemini.google.com/app";
+        // アプリがない場合のフォールバック（0.5秒後にブラウザを開く）
         setTimeout(() => {
-            window.location.href = `https://gemini.google.com/app?q=${query}`;
+            window.open("https://gemini.google.com/app", "_blank");
         }, 500);
     } else {
-        // PC用：Web版
-        url = `https://gemini.google.com/app?q=${query}`;
+        // パソコン：ブラウザ版を開く
+        window.open("https://gemini.google.com/app", "_blank");
     }
-
-    window.open(url, '_blank');
 }
 
     
@@ -403,6 +393,7 @@ async function resetAllStats() {
     alert("完了しました");
     location.reload();
 }
+
 
 
 
