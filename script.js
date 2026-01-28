@@ -145,10 +145,9 @@ function flipCard() {
 
 
 //geminiアプリを開く
-function askGemini() {
+async function askGemini() {
     if (!currentCard) return;
 
-    // Geminiへの指示文を作成
     const prompt = `
 以下の内容について解説してください。
 単語帳のデータを修正したいので、以下の2段階で回答してください。
@@ -160,9 +159,33 @@ function askGemini() {
 現在の答え：${currentCard.a}
 `.trim();
 
+    // クリップボードにコピー（スマホアプリだとURL経由で文字が渡らないことが多いため、これが一番確実です）
+    try {
+        await navigator.clipboard.writeText(prompt);
+    } catch (err) {
+        console.error("コピー失敗", err);
+    }
+
     const query = encodeURIComponent(prompt);
-    // Geminiアプリ/サイトを起動
-    const url = `https://gemini.google.com/app?q=${query}`;
+    
+    // デバイス判定
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
+    let url;
+    if (isMobile) {
+        // スマホ用：Geminiアプリを起動するディープリンク（iOS/Android共通）
+        // アプリがインストールされていればアプリで、なければブラウザで開きます
+        url = `googlegemini://gemini.google.com/app?q=${query}`;
+        
+        // フォールバック（アプリが起動しなかった時用）
+        setTimeout(() => {
+            window.location.href = `https://gemini.google.com/app?q=${query}`;
+        }, 500);
+    } else {
+        // PC用：Web版
+        url = `https://gemini.google.com/app?q=${query}`;
+    }
+
     window.open(url, '_blank');
 }
 
@@ -380,6 +403,7 @@ async function resetAllStats() {
     alert("完了しました");
     location.reload();
 }
+
 
 
 
