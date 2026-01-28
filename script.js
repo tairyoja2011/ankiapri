@@ -137,7 +137,9 @@ function showNext() {
     document.getElementById("user-input-area").style.display = isInputMode ? "block" : "none";
     document.getElementById("user-answer-input").value = "";
 }
-function flipCard() {
+
+
+function flipCard() {
     if (isInputMode) {
         const inputVal = document.getElementById("user-answer-input").value.trim();
         document.getElementById("current-user-ans").innerText = inputVal || "(未入力)";
@@ -156,8 +158,27 @@ function showNext() {
 }
 
 
+//geminiアプリを開く
+function askGemini() {
+    if (!currentCard) return;
 
+    // Geminiへの指示文を作成
+    const prompt = `
+以下の内容について解説してください。
+単語帳のデータを修正したいので、以下の2段階で回答してください。
 
+1. 【要約版】（そのまま単語帳の「答え」欄に貼り付けられるような、短く簡潔な説明）
+2. 【詳細版】（背景や関連知識を含めた、理解を深めるための詳しい解説）
+
+問題：${currentCard.q}
+現在の答え：${currentCard.a}
+`.trim();
+
+    const query = encodeURIComponent(prompt);
+    // Geminiアプリ/サイトを起動
+    const url = `https://gemini.google.com/app?q=${query}`;
+    window.open(url, '_blank');
+}
 
     
 function handleEval(rating) {
@@ -373,6 +394,7 @@ async function resetAllStats() {
     alert("完了しました");
     location.reload();
 }
+
 
 
 
