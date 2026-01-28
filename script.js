@@ -84,16 +84,6 @@ async function startStudyMode(type) {
     showNext();
 }
 
-async function startInputMode() {
-    isInputMode = true;
-    resetDisplayState();
-    
-    // await loadData(); // ←これを削除またはコメントアウト
-    
-    queue = [...allCards].sort(() => Math.random() - 0.5);
-    changeView('view-study'); 
-    showNext();
-}
 
 async function startInputMode() {
     isInputMode = true;
@@ -390,6 +380,7 @@ async function resetAllStats() {
     alert("完了しました");
     location.reload();
 }
+
 
 
 
