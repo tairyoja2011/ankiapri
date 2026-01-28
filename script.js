@@ -13,11 +13,7 @@ function changeView(id) {
     window.scrollTo(0,0);
 }
 
-function showSubMenu(title) {
-    isInputMode = false;
-    document.getElementById('selected-book-title').textContent = title;
-    changeView('view-submenu');
-}
+
 
 async function loadData() {
     const res = await fetch(READ_URL);
@@ -394,6 +390,7 @@ async function resetAllStats() {
     alert("完了しました");
     location.reload();
 }
+
 
 
 
