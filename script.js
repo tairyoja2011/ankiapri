@@ -377,11 +377,14 @@ async function startListMode() {
 }
 
 // 【追加】リストを描画する専用の関数
-function renderList(cards) {
+function renderList(cards) { // ← ここが (cards) になっていること
     const container = document.getElementById('list-container');
+    if (!container) return;
+
     const total = cards.length;
     document.getElementById('list-title').textContent = `一覧 (${total}問)`;
 
+    // allCards ではなく、引数で渡された cards をループさせる
     container.innerHTML = cards.map((c, i) => `
         <div class="list-item" style="position: relative;">
             <div style="font-size:10px; color:#aaa; margin-bottom:5px;">No. ${i+1}</div>
@@ -399,13 +402,22 @@ function renderList(cards) {
 }
 
 // 【追加】検索窓で入力するたびに実行される関数
+// 検索フィルター機能（スマホ対応強化版）
 function filterList() {
-    const query = document.getElementById('list-search-input').value.toLowerCase();
-    const filtered = allCards.filter(c => 
-        c.q.toLowerCase().includes(query) || 
-        c.a.toLowerCase().includes(query)
-    );
-    renderList(filtered); // 絞り込んだ結果だけで再描画
+    const searchInput = document.getElementById('list-search-input');
+    if (!searchInput) return;
+
+    const query = searchInput.value.toLowerCase().trim(); // 空白を削除して小文字に
+    
+    // allCards（全データ）から絞り込む
+    const filtered = allCards.filter(c => {
+        const qText = (c.q || "").toLowerCase();
+        const aText = (c.a || "").toLowerCase();
+        return qText.includes(query) || aText.includes(query);
+    });
+
+    // 絞り込んだ結果を画面に再描画
+    renderList(filtered); 
 }
 
 // 【追加】一覧の「編集」ボタンから修正画面へ移動する関数
@@ -435,6 +447,7 @@ async function resetAllStats() {
     alert("完了しました");
     location.reload();
 }
+
 
 
 
