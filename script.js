@@ -368,24 +368,66 @@ function toggleEditMode() {
 async function startListMode() {
     await loadData();
     changeView('view-list');
+    // 検索窓の中身を空にする
+    if(document.getElementById('list-search-input')) {
+        document.getElementById('list-search-input').value = "";
+    }
+    // 表示処理は下の renderList 関数に任せる
+    renderList(allCards);
+}
+
+// 【追加】リストを描画する専用の関数
+function renderList(cards) {
     const container = document.getElementById('list-container');
-    const total = allCards.length;
+    const total = cards.length;
     document.getElementById('list-title').textContent = `一覧 (${total}問)`;
 
-    container.innerHTML = allCards.map((c, i) => `
-        <div class="list-item">
+    container.innerHTML = cards.map((c, i) => `
+        <div class="list-item" style="position: relative;">
             <div style="font-size:10px; color:#aaa; margin-bottom:5px;">No. ${i+1}</div>
-            <div class="list-q">${c.q}</div>
-            <div class="list-a">${c.a}</div>
+            <div class="list-q"><strong>Q:</strong> ${c.q}</div>
+            <div class="list-a"><strong>A:</strong> ${c.a}</div>
             <div style="margin-top:10px;">
                 <span class="stat-badge badge-bad">✖ ${c.bad}</span>
                 <span class="stat-badge badge-good">OK ${c.good}</span>
                 <span class="stat-badge badge-perfect">★ ${c.perfect}</span>
-                <span style="font-size:11px; color:#999; margin-left:10px;">計 ${c.total}回</span>
+                <button onclick="editFromList('${c.q.replace(/'/g, "\\'")}')" 
+                        style="margin-left: 10px; padding: 4px 10px; font-size: 11px; cursor:pointer; background:#eee; border:1px solid #ccc; border-radius:4px;">編集</button>
             </div>
         </div>
     `).join('');
 }
+
+// 【追加】検索窓で入力するたびに実行される関数
+function filterList() {
+    const query = document.getElementById('list-search-input').value.toLowerCase();
+    const filtered = allCards.filter(c => 
+        c.q.toLowerCase().includes(query) || 
+        c.a.toLowerCase().includes(query)
+    );
+    renderList(filtered); // 絞り込んだ結果だけで再描画
+}
+
+// 【追加】一覧の「編集」ボタンから修正画面へ移動する関数
+function editFromList(questionText) {
+    const target = allCards.find(c => c.q === questionText);
+    if (!target) return;
+
+    currentCard = target; 
+    changeView('view-study'); 
+    
+    // 画面表示を整えて修正モードを起動
+    resetDisplayState();
+    document.getElementById("question").textContent = currentCard.q;
+    document.getElementById("answer-display").innerText = currentCard.a;
+    document.getElementById("answer-container").style.display = "block";
+    
+    toggleEditMode(); // 修正モード（入力欄）を直接開く
+}
+
+
+
+
 
 async function resetAllStats() {
     if (prompt("リセットするには「reset」と入力してください") !== "reset") return;
@@ -393,6 +435,7 @@ async function resetAllStats() {
     alert("完了しました");
     location.reload();
 }
+
 
 
 
