@@ -18,10 +18,12 @@ function changeView(id) {
 async function loadData() {
     const res = await fetch(READ_URL);
     const csv = await res.text();
-    const rows = csv.split(/\r?\n/).slice(1);
-    allCards = rows.filter(r => r.trim()).map(r => {
-        // カンマを含む正解データに対応するため簡易的な分割を考慮
-        const c = r.split(',');
+    
+    // 改行コードが混じったCSVを正しく分割する処理
+    const rows = parseCSV(csv);
+    
+    // 最初の行（ヘッダー）を飛ばしてオブジェクト化
+    allCards = rows.slice(1).filter(r => r[0]).map(c => {
         return { 
             q: c[0]?.trim(), 
             a: c[1]?.trim(), 
@@ -32,6 +34,42 @@ async function loadData() {
             total: Number(c[6])||0 
         };
     });
+}
+
+// 改行・カンマ入りのCSVを解析する補助関数
+function parseCSV(text) {
+    const rows = [];
+    let row = [];
+    let col = "";
+    let inQuotes = false;
+
+    for (let i = 0; i < text.length; i++) {
+        let char = text[i];
+        let next = text[i+1];
+
+        if (inQuotes) {
+            if (char === '"' && next === '"') { // 二重引用符の回避
+                col += '"'; i++;
+            } else if (char === '"') { // 閉じ引用符
+                inQuotes = false;
+            } else {
+                col += char; // 引用符内の改行やカンマはそのまま文字として扱う
+            }
+        } else {
+            if (char === '"') {
+                inQuotes = true;
+            } else if (char === ',') {
+                row.push(col); col = "";
+            } else if (char === '\r' || char === '\n') {
+                row.push(col); rows.push(row); row = []; col = "";
+                if (char === '\r' && next === '\n') i++; // CRLF対応
+            } else {
+                col += char;
+            }
+        }
+    }
+    if (col || row.length > 0) { row.push(col); rows.push(row); }
+    return rows;
 }
 
 function resetDisplayState() {
@@ -447,6 +485,7 @@ async function resetAllStats() {
     alert("完了しました");
     location.reload();
 }
+
 
 
 
