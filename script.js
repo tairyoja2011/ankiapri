@@ -170,16 +170,18 @@ function flipCard() {
         const key = "last_ans_" + currentCard.q;
         document.getElementById("last-user-ans").innerText = localStorage.getItem(key) || "(なし)";
         if (inputVal !== "") localStorage.setItem(key, inputVal);
-        document.getElementById("comparison-area").style.display = "block";
-        document.getElementById("edit-toggle-btn").style.display = "none";
+        document.getElementById("comparison-area").style.display = "block";     
+        // ここを追加！入力モードでも修正ボタンを表示させる
+        document.getElementById("edit-toggle-btn").style.display = "block"; 
     }
 
-    // --- ここを確実に修正 ---
-    document.getElementById("answer-display").style.display = "block"; // 回答を表示
-    document.getElementById("answer-container").style.display = "block"; // コンテナを表示
+    document.getElementById("answer-display").style.display = "block"; 
+    document.getElementById("answer-container").style.display = "block"; 
     document.getElementById("showAnswerBtn").style.display = "none";
     document.getElementById("evalContainer").style.display = "flex";
 }
+
+
 
 
 //geminiアプリを開く
@@ -342,6 +344,18 @@ async function updateCurrentCardContent() {
         document.getElementById("delete-btn").style.display = "inline"; // 削除ボタンも再表示
         
         alert("修正しました！数秒後にシートに反映されます。");
+    // もしキューが空（一覧から来た場合）なら、一覧画面へ戻る
+        if (queue.length === 0) {
+            startListMode();
+        } else {
+            // 学習中なら修正エリアを閉じる
+            document.getElementById("edit-mode-area").style.display = "none";
+            document.getElementById("question").style.display = "block";
+            document.getElementById("answer-display").style.display = "block";
+            document.getElementById("edit-toggle-btn").style.display = "block";
+            document.getElementById("delete-btn").style.display = "inline";
+        }
+        
     } catch (e) {
         alert("修正の送信に失敗しました");
     }
@@ -464,17 +478,19 @@ function editFromList(questionText) {
     if (!target) return;
 
     currentCard = target; 
-    changeView('view-study'); 
+    queue = []; // 一覧からの単発編集なのでキューを空にする
     
-    // 画面表示を整えて修正モードを起動
+    changeView('view-study'); 
     resetDisplayState();
+    
     document.getElementById("question").textContent = currentCard.q;
     document.getElementById("answer-display").innerText = currentCard.a;
-    document.getElementById("answer-container").style.display = "block";
     
-    toggleEditMode(); // 修正モード（入力欄）を直接開く
+    // ここが重要：回答を表示状態にしないと修正ボタンやGeminiボタンが出ない
+    document.getElementById("answer-container").style.display = "block"; 
+    
+    toggleEditMode(); // 修正フォームを直接開く
 }
-
 
 
 
@@ -485,6 +501,7 @@ async function resetAllStats() {
     alert("完了しました");
     location.reload();
 }
+
 
 
 
